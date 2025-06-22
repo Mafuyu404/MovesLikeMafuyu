@@ -66,7 +66,7 @@ public class SwimEvent {
             }
         }
         if (event.getKey() == options.keyJump.getKey().getValue()) {
-            if (!player.isUnderWater() && player.isSwimming()) {
+            if (!player.isUnderWater() && player.isInWater() && player.isSwimming()) {
                 if (SlideEvent.cooldown > 0 || !Config.ENABLE_SWIMMING_PUSH.get() || event.getAction() != InputConstants.PRESS || player.getTags().contains("slide"))
                     return;
                 player.setSwimming(false);
