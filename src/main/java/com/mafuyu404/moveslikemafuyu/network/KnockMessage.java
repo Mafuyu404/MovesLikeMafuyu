@@ -1,5 +1,6 @@
 package com.mafuyu404.moveslikemafuyu.network;
 
+import com.mafuyu404.moveslikemafuyu.Config;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -40,9 +41,11 @@ public class KnockMessage {
             msg.entityId.forEach(id -> {
                 Entity entity = level.getEntity(id);
                 if (entity == null) return;
+                String[] type = entity.getType().getDescriptionId().split("\\.");
+                if (Config.SLIDE_KNOCK_BLACKLIST.get().contains(type[1] + ":" + type[2])) return;
                 Vec3 motion = entity.getDeltaMovement();
                 double boost = 1;
-                entity.setDeltaMovement(motion.add(playerMotion.x*boost, 0.7, playerMotion.z*boost));
+                entity.setDeltaMovement(motion.add(playerMotion.x * boost, 0.7, playerMotion.z * boost));
                 entity.hurtMarked = true;
             });
             player.setDeltaMovement(playerMotion.add(-playerMotion.x, 0, -playerMotion.z));

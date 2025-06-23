@@ -32,6 +32,10 @@ public class SwimEvent {
         if (cooldown > 0 && cooldown <= COOLDOWN) {
             cooldown--;
         }
+        if (player.getDeltaMovement().length() < 0.1) {
+            player.setSwimming(false);
+            player.setSprinting(false);
+        }
         if (Config.enable("ShallowSwimming") && player.isInWater() && options.keySprint.isDown()) {
             player.setSprinting(true);
             player.setSwimming(true);

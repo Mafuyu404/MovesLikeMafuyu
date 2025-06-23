@@ -7,6 +7,11 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 @Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class Config {
 
@@ -32,6 +37,8 @@ public class Config {
     public static final ForgeConfigSpec.ConfigValue<Integer> CLIMB_JUMP_COOLDOWN;
     public static final ForgeConfigSpec.ConfigValue<Integer> SWIMMING_BOOST_COOLDOWN;
     public static final ForgeConfigSpec.ConfigValue<Integer> SWIMMING_BOOST_AIR_COST;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>>  SLIDE_KNOCK_BLACKLIST;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>>  CLIMB_BLOCK_WHITELIST;
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
 
     public static final ForgeConfigSpec SPEC;
@@ -115,6 +122,19 @@ public class Config {
                 .comment("水中推进的氧气消耗，默认为30，氧气上限为300。")
                 .define("SwimmingBoostAirCost", 30);
         BUILDER.pop();
+        BUILDER.push("Blacklist Setting");
+        SLIDE_KNOCK_BLACKLIST = BUILDER
+                .comment("不会被滑行撞飞的实体。")
+                .defineList("SlideKnockBlacklist",
+                        List.of("minecraft:item"),
+                        entry -> entry instanceof String
+                );
+        CLIMB_BLOCK_WHITELIST = BUILDER
+                .comment("补充可以被攀爬的方块。")
+                .defineList("ClimbBlockWhitelist",
+                        List.of("minecraft:stone"),
+                        entry -> entry instanceof String
+                );
         SPEC = BUILDER.build();
     }
 

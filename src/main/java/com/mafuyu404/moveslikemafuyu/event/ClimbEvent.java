@@ -20,6 +20,8 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.spongepowered.asm.mixin.Unique;
 
+import java.util.Arrays;
+
 @Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
 public class ClimbEvent {
     private static int COOLDOWN;
@@ -67,7 +69,10 @@ public class ClimbEvent {
         BlockPos checkPos = player.blockPosition().relative(facing);
         BlockPos upperPos = checkPos.above();
         BlockPos belowPos = player.blockPosition().below();
-        if (!player.onGround() && isClimbableWall(player.level(), checkPos) && !player.level().getBlockState(belowPos).isSolidRender(player.level(), belowPos) && !isClimbableWall(player.level(), upperPos) && !isClimbableWall(player.level(), player.blockPosition())) {
+        BlockState state = player.level().getBlockState(checkPos);
+        String[] type = state.getBlock().getDescriptionId().split("\\.");
+        boolean checkBlock = isClimbableWall(player.level(), checkPos) || Config.CLIMB_BLOCK_WHITELIST.get().contains(type[1] + ":" + type[2]);
+        if (!player.onGround() && checkBlock && !player.level().getBlockState(belowPos).isSolidRender(player.level(), belowPos) && !isClimbableWall(player.level(), upperPos) && !isClimbableWall(player.level(), player.blockPosition())) {
             AABB playerBB = player.getBoundingBox();
             double distance = ClimbEvent.Falling ? FALLING_CATCH_DISTANCE : CATCH_DISTANCE;
             AABB wallBB = new AABB(checkPos).inflate(distance);
