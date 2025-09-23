@@ -2,6 +2,7 @@ package com.mafuyu404.moveslikemafuyu.event;
 
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
+import com.mafuyu404.moveslikemafuyu.compat.KeyPrompts;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -32,6 +33,10 @@ public class SwimEvent {
         if (cooldown > 0 && cooldown <= COOLDOWN) {
             cooldown--;
         }
+
+        if (canSwimmingBoost(player)) KeyPrompts.show(options.keySprint.getKey().toString(), "smartkeyprompts.moveslikemafuyu.swimming_boost");
+        if (canSwimmingPush(player)) KeyPrompts.show(options.keyJump.getKey().toString(), "smartkeyprompts.moveslikemafuyu.swimming_push");
+
         if (player.getDeltaMovement().length() < 0.1) {
             player.setSwimming(false);
             player.setSprinting(false);
@@ -51,8 +56,8 @@ public class SwimEvent {
         Player player = Minecraft.getInstance().player;
         Options options = Minecraft.getInstance().options;
         if (player == null || player.isSpectator()) return;
-        if (Config.enable("SwimmingBoost") && event.getKey() == options.keySprint.getKey().getValue()) {
-            if (cooldown <= 0 && player.isSwimming() && event.getAction() == InputConstants.PRESS) {
+        if (event.getAction() == InputConstants.PRESS && event.getKey() == options.keySprint.getKey().getValue()) {
+            if (canSwimmingBoost(player)) {
                 cooldown = COOLDOWN;
                 Vec3 lookDirection = player.getLookAngle();
                 double boost = 0.4;
@@ -69,17 +74,24 @@ public class SwimEvent {
             }
         }
         if (event.getKey() == options.keyJump.getKey().getValue()) {
-            if (!player.isUnderWater() && player.isInWater() && player.isSwimming()) {
-//                options.keyJump.setDown(false);
-                if (SlideEvent.cooldown > 0 || !Config.enable("SwimmingPush") || event.getAction() != InputConstants.PRESS || player.getTags().contains("slide")) return;
-                player.setSwimming(false);
-                if (!player.getTags().contains("slide")) {
+            if (!player.isUnderWater() && player.isInWater() && player.isSwimming() && event.getAction() == InputConstants.PRESS) {
+                if (canSwimmingPush(player)) {
                     new Timer().schedule(new TimerTask() {
                         public void run() {
                             SlideEvent.startSlide(player);
                         }
                     },110);
                 }
+//                options.keyJump.setDown(false);
+//                if (SlideEvent.cooldown > 0 || !Config.enable("SwimmingPush") || event.getAction() != InputConstants.PRESS || player.getTags().contains("slide")) return;
+//                player.setSwimming(false);
+//                if (!player.getTags().contains("slide")) {
+//                    new Timer().schedule(new TimerTask() {
+//                        public void run() {
+//                            SlideEvent.startSlide(player);
+//                        }
+//                    },110);
+//                }
             }
         }
     }
@@ -87,5 +99,12 @@ public class SwimEvent {
     public static void onConfigLoad(PlayerEvent.PlayerLoggedInEvent event) {
         COOLDOWN = Config.ConfigCache.getInt("SwimmingBoostCooldown");
         AIR_COST = Config.ConfigCache.getInt("SwimmingBoostAirCost");
+    }
+
+    public static boolean canSwimmingBoost(Player player) {
+        return Config.enable("SwimmingBoost") && cooldown <= 0 && player.isSwimming();
+    }
+    public static boolean canSwimmingPush(Player player) {
+        return Config.enable("SwimmingPush") && !player.isUnderWater() && player.isInWater() && player.isSwimming() && SlideEvent.cooldown <= 0 && !player.getTags().contains("slide");
     }
 }

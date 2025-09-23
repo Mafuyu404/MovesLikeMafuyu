@@ -2,6 +2,7 @@ package com.mafuyu404.moveslikemafuyu.event;
 
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
+import com.mafuyu404.moveslikemafuyu.compat.KeyPrompts;
 import com.mafuyu404.moveslikemafuyu.network.KnockMessage;
 import com.mafuyu404.moveslikemafuyu.network.NetworkHandler;
 import com.mafuyu404.moveslikemafuyu.network.TagMessage;
@@ -57,6 +58,9 @@ public class SlideEvent {
             if (speed < 0.05) cooldown--;
             return;
         }
+
+        if (canSlide(player)) KeyPrompts.show("key.keyboard.left.shift", "smartkeyprompts.moveslikemafuyu.slide");
+        if (canRefreshDap(player)) KeyPrompts.show("key.keyboard.space", "smartkeyprompts.moveslikemafuyu.dap");
 
         if (player.getTags().contains("slide")) {
             if (storedCameraType != null) options.setCameraType(storedCameraType);
@@ -119,7 +123,7 @@ public class SlideEvent {
         if (player == null || player.isSpectator() || event.getAction() != InputConstants.PRESS) return;
         if (event.getKey() == options.keyJump.getKey().getValue()) {
             if (player.getTags().contains("slide")) {
-                if (Config.enable("Dap") && canDap && !dap_refreshed) {
+                if (canRefreshDap(player)) {
                     dap_refreshed = true;
                     dap_times++;
                 }
@@ -127,7 +131,7 @@ public class SlideEvent {
             }
         }
         if (event.getKey() == options.keyShift.getKey().getValue()) {
-            if (player.isSprinting() && player.onGround() && !player.isInWater() && !player.isFallFlying() && player.isLocalPlayer() && !options.keyJump.isDown()) {
+            if (canSlide(player)) {
                 if (!player.getTags().contains("craw")) startSlide(player);
             }
         }
@@ -213,5 +217,12 @@ public class SlideEvent {
         if (event.getEntity().getTags().contains("slide") && event.getSource().is(DamageTypes.FLY_INTO_WALL)) {
             event.setCanceled(true);
         }
+    }
+
+    public static boolean canSlide(Player player) {
+        return player.isSprinting() && player.onGround() && !player.isInWater() && !player.isFallFlying() && player.isLocalPlayer() && !Minecraft.getInstance().options.keyJump.isDown() && Config.enable("Slide");
+    }
+    public static boolean canRefreshDap(Player player) {
+        return player.getTags().contains("slide") && Config.enable("Dap") && canDap && !dap_refreshed;
     }
 }

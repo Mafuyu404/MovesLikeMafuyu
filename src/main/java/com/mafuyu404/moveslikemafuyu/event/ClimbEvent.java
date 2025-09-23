@@ -2,6 +2,7 @@ package com.mafuyu404.moveslikemafuyu.event;
 
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
+import com.mafuyu404.moveslikemafuyu.compat.KeyPrompts;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.core.BlockPos;
@@ -18,9 +19,6 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import org.spongepowered.asm.mixin.Unique;
-
-import java.util.Arrays;
 
 @Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
 public class ClimbEvent {
@@ -38,6 +36,7 @@ public class ClimbEvent {
         if (cooldown > 0 && cooldown <= COOLDOWN) {
             cooldown--;
         }
+        if (canClimbJump(player)) KeyPrompts.show(options.keyJump.getKey().toString(), "smartkeyprompts.moveslikemafuyu.climbing_jump");
         if (!Config.enable("FallingRescue")) {
             Falling = false;
             return;
@@ -56,12 +55,15 @@ public class ClimbEvent {
         Player player = Minecraft.getInstance().player;
         Options options = Minecraft.getInstance().options;
         if (player == null || player.isSpectator()) return;
-        if (cooldown <= 0 && event.getKey() == options.keyJump.getKey().getValue()) {
-            if (player.isShiftKeyDown() && player.onClimbable()) {
+        if (event.getKey() == options.keyJump.getKey().getValue()) {
+            if (canClimbJump(player)) {
                 player.jumpFromGround();
                 cooldown = COOLDOWN;
             }
         }
+    }
+    public static boolean canClimbJump(Player player) {
+        return Config.enable("ClimbJump") && Minecraft.getInstance().options.keyShift.isDown() && player.onClimbable() && cooldown <= 0;
     }
 
     public static boolean checkWallClimbCondition(Player player) {
@@ -71,6 +73,7 @@ public class ClimbEvent {
         BlockPos belowPos = player.blockPosition().below();
         BlockState state = player.level().getBlockState(checkPos);
         String[] type = state.getBlock().getDescriptionId().split("\\.");
+        if (!Config.enable("Climb") && !Config.CLIMB_BLOCK_WHITELIST.get().contains(type[1] + ":" + type[2])) return false;
         boolean checkBlock = isClimbableWall(player.level(), checkPos) || Config.CLIMB_BLOCK_WHITELIST.get().contains(type[1] + ":" + type[2]);
         if (!player.onGround() && checkBlock && !player.level().getBlockState(belowPos).isSolidRender(player.level(), belowPos) && !isClimbableWall(player.level(), upperPos) && !isClimbableWall(player.level(), player.blockPosition())) {
             AABB playerBB = player.getBoundingBox();

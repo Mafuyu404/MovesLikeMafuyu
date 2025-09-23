@@ -2,6 +2,7 @@ package com.mafuyu404.moveslikemafuyu.event;
 
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
+import com.mafuyu404.moveslikemafuyu.compat.KeyPrompts;
 import com.mafuyu404.moveslikemafuyu.network.NetworkHandler;
 import com.mafuyu404.moveslikemafuyu.network.TagMessage;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -30,6 +31,9 @@ public class CrawEvent {
         if (!player.isLocalPlayer() || player.isSpectator()) return;
         Options options = Minecraft.getInstance().options;
 
+        if (canLeap(player)) KeyPrompts.show(options.keyShift.getKey().toString(), "smartkeyprompts.moveslikemafuyu.leap");
+        if (canCrawSlide(player)) KeyPrompts.show(options.keySprint.getKey().toString(), "smartkeyprompts.moveslikemafuyu.slide");
+
         if (Config.enable("Craw") && player.getTags().contains("craw") && !player.isSpectator() && !player.getTags().contains("slide")) {
             options.keyShift.setDown(false);
             player.setForcedPose(Pose.SWIMMING);
@@ -51,7 +55,7 @@ public class CrawEvent {
                 // 不在爬行状态且双击潜行键那就进入爬行状态
                 startCraw(player);
             }
-            else if (Config.enable("Leap") && player.isSprinting() && currentTime - lastJumpPressTime < JUMP_TIMER && player.getDeltaMovement().y > 0 && !player.onGround() && !player.isInWater()) {
+            else if (canLeap(player)) {
                 // 满足条件就触发飞扑
                 // 按下潜行键的时间距离跳跃不能过长lastJumpPressTime
                 Vec3 lookDirection = player.getLookAngle();
@@ -74,8 +78,8 @@ public class CrawEvent {
             }
         }
         if (event.getKey() == options.keySprint.getKey().getValue() && event.getAction() == InputConstants.PRESS) {
-            if (Config.enable("CrawSlide") && player.getPose() == Pose.SWIMMING && player.onGround()) {
-                if (SlideEvent.cooldown <= 0 && !player.getTags().contains("slide")) SlideEvent.startSlide(player);
+            if (canCrawSlide(player)) {
+                SlideEvent.startSlide(player);
             }
         }
     }
@@ -93,5 +97,12 @@ public class CrawEvent {
     @SubscribeEvent
     public static void onConfigLoad(PlayerEvent.PlayerLoggedInEvent event) {
 
+    }
+
+    public static boolean canLeap(Player player) {
+        return Config.enable("Leap") && !player.getTags().contains("craw") && player.isSprinting() && System.currentTimeMillis() - lastJumpPressTime < JUMP_TIMER && player.getDeltaMovement().y > 0 && !player.onGround() && !player.isInWater();
+    }
+    public static boolean canCrawSlide(Player player) {
+        return Config.enable("CrawSlide") && player.getPose() == Pose.SWIMMING && player.onGround() && SlideEvent.cooldown <= 0 && !player.getTags().contains("slide");
     }
 }
