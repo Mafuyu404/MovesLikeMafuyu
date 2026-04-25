@@ -19,6 +19,7 @@ public class NetworkHandler {
     // 注册数据包
     public static void register() {
         int packetId = 0;
+        CHANNEL.registerMessage(packetId++, CrawlPacket.class, CrawlPacket::encode, CrawlPacket::decode, CrawlPacket::handle);
         CHANNEL.registerMessage(packetId++, TagMessage.class, TagMessage::encode, TagMessage::decode, TagMessage::handle);
         CHANNEL.registerMessage(packetId++, KnockMessage.class, KnockMessage::encode, KnockMessage::decode, KnockMessage::handle);
         CHANNEL.registerMessage(packetId++, ConfigMessage.class, ConfigMessage::encode, ConfigMessage::decode, ConfigMessage::handle);

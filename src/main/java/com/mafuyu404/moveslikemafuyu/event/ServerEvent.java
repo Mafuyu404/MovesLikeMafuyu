@@ -33,14 +33,23 @@ public class ServerEvent {
         // 服务端同步才能改玩家碰撞箱
         Player player = event.player;
         if (player.isLocalPlayer() || player.isSpectator()) return;
-        if (Config.enable("ShallowSwimming") && player.isInWater() && player.isSprinting()) {
-            player.setForcedPose(Pose.SWIMMING);
-            return;
-        }
+
         if (player.getTags().contains("craw")) {
             player.setForcedPose(Pose.SWIMMING);
             return;
         }
+        if (Config.enable("ShallowSwimming") && player.isInWater() && player.isSprinting()) {
+            player.setForcedPose(Pose.SWIMMING);
+            return;
+        }
         if (player.getForcedPose() == Pose.SWIMMING) player.setForcedPose(null);
+    }
+
+    @SubscribeEvent
+    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        Player player = event.getEntity();
+        if (player.isLocalPlayer()) return;
+        player.removeTag("craw");
+        player.setForcedPose(null);
     }
 }

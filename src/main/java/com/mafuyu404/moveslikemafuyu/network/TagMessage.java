@@ -3,6 +3,7 @@ package com.mafuyu404.moveslikemafuyu.network;
 import com.mafuyu404.moveslikemafuyu.event.SlideEvent;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -33,6 +34,9 @@ public class TagMessage {
             if (msg.state) {
                 if (!player.getTags().contains(msg.tag)) {
                     player.addTag(msg.tag);
+                }
+                if (msg.tag.equals("craw")) {
+                    player.setForcedPose(Pose.SWIMMING);
                 }
             }
             else {
