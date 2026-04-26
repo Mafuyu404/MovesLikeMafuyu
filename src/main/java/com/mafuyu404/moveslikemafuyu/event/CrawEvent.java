@@ -24,6 +24,7 @@ public class CrawEvent {
     private static final int JUMP_TIMER = 500;
     private static long lastShiftPressTime;
     private static long lastJumpPressTime;
+    private static int autoCrawReleaseTicks;
 
     @SubscribeEvent
     public static void onClientTick(TickEvent.PlayerTickEvent event) {
@@ -40,6 +41,15 @@ public class CrawEvent {
                 && !player.isSpectator() && !player.getTags().contains("slide")) {
             options.keyShift.setDown(false);
             player.setForcedPose(Pose.SWIMMING);
+        }
+        if (player.getTags().contains("auto_craw")) {
+            if (AutoDodgeEvent.canStandSafely(player)) {
+                cancelCraw(player);
+            } else if (autoCrawReleaseTicks > 0) {
+                autoCrawReleaseTicks--;
+            } else {
+                autoCrawReleaseTicks = 2;
+            }
         }
     }
 
@@ -93,10 +103,38 @@ public class CrawEvent {
         NetworkHandler.CHANNEL.sendToServer(new CrawlPacket(true));
     }
 
+    public static void startTemporaryCraw(Player player, int ticks) {
+        if (!player.getTags().contains("craw") || player.getTags().contains("auto_craw")) {
+            player.addTag("auto_craw");
+            startCraw(player);
+            autoCrawReleaseTicks = ticks;
+        }
+    }
+
+    public static void startLeap(Player player, Vec3 direction) {
+        if (!Config.enable("Leap") || player.isSpectator() || player.isInWater()) return;
+        Vec3 horizontal = new Vec3(direction.x, 0, direction.z);
+        if (horizontal.lengthSqr() < 1.0E-6) horizontal = new Vec3(player.getLookAngle().x, 0, player.getLookAngle().z);
+        if (horizontal.lengthSqr() < 1.0E-6) horizontal = new Vec3(0, 0, 1);
+        horizontal = horizontal.normalize();
+        player.setSprinting(true);
+        player.setDeltaMovement(player.getDeltaMovement().add(horizontal.x * 0.35, 0.42, horizontal.z * 0.35));
+        player.addTag("auto_craw");
+        autoCrawReleaseTicks = 8;
+        startCraw(player);
+        lastJumpPressTime = 0;
+    }
+
     public static void cancelCraw(Player player) {
         player.removeTag("craw");
+        player.removeTag("auto_craw");
+        autoCrawReleaseTicks = 0;
         player.setForcedPose(null);
         NetworkHandler.CHANNEL.sendToServer(new CrawlPacket(false));
+    }
+
+    public static boolean isAutoCraw(Player player) {
+        return player.getTags().contains("auto_craw");
     }
 
     @SubscribeEvent

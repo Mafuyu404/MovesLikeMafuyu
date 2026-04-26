@@ -175,6 +175,10 @@ public class SlideEvent {
         DAP_TIMES = Config.ConfigCache.getInt("DapTimes");
     }
     public static void startSlide(Player player) {
+        startSlide(player, player.getLookAngle());
+    }
+
+    public static void startSlide(Player player, Vec3 direction) {
         Options options = Minecraft.getInstance().options;
         if (!Config.enable("Slide") || cooldown > 0) return;
         timer = TIMER;
@@ -186,7 +190,7 @@ public class SlideEvent {
         NetworkHandler.CHANNEL.sendToServer(new TagMessage("slide", true));
         player.setSprinting(true);
         player.addTag("slide");
-        Vec3 lookDirection = player.getLookAngle();
+        Vec3 lookDirection = horizontalDirection(direction);
         double boost = 0.5;
         player.startFallFlying();
         player.setDeltaMovement(
@@ -198,6 +202,14 @@ public class SlideEvent {
                 0.5f,  // 音量
                 0.8f   // 音调
         );
+    }
+    private static Vec3 horizontalDirection(Vec3 direction) {
+        Vec3 horizontal = new Vec3(direction.x, 0, direction.z);
+        if (horizontal.lengthSqr() < 1.0E-6) {
+            Player player = Minecraft.getInstance().player;
+            horizontal = player == null ? new Vec3(0, 0, 1) : new Vec3(player.getLookAngle().x, 0, player.getLookAngle().z);
+        }
+        return horizontal.lengthSqr() < 1.0E-6 ? new Vec3(0, 0, 1) : horizontal.normalize();
     }
     private static void cancel(Player player) {
         NetworkHandler.CHANNEL.sendToServer(new TagMessage("slide", false));

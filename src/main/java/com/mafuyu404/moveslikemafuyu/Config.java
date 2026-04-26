@@ -30,6 +30,7 @@ public class Config {
     public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_CRAW_SLIDE;
     public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_LEAP;
     public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_JUMP_CANCEL_CRAW;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_AUTO_DODGE;
     public static final ForgeConfigSpec.ConfigValue<Integer> SLIDE_DURATION;
     public static final ForgeConfigSpec.ConfigValue<Integer> SLIDE_AIR_DURATION;
     public static final ForgeConfigSpec.ConfigValue<Integer> DAP_TIMES;
@@ -99,6 +100,11 @@ public class Config {
                 .comment("是否启用跳跃取消爬行：跳跃后短时间内进入爬行状态从而触发飞扑。")
                 .define("enableJumpCancelCraw", false);
         BUILDER.pop();
+        BUILDER.push("Auto Dodge Setting");
+        ENABLE_AUTO_DODGE = BUILDER
+                .comment("Automatically dodge incoming projectiles around the player's reach range.")
+                .define("enableAutoDodge", true);
+        BUILDER.pop();
         BUILDER.push("Attribute Setting");
         SLIDE_DURATION = BUILDER
                 .comment("滑行时间限制，默认为25， 一秒为20。")
@@ -159,6 +165,7 @@ public class Config {
         config.putBoolean("enableCrawSlide", ENABLE_CRAW_SLIDE.get());
         config.putBoolean("enableLeap", ENABLE_LEAP.get());
         config.putBoolean("enableJumpCancelCraw", ENABLE_JUMP_CANCEL_CRAW.get());
+        config.putBoolean("enableAutoDodge", ENABLE_AUTO_DODGE.get());
         config.putInt("SlideDuration", SLIDE_DURATION.get());
         config.putInt("SlideAirDuration", SLIDE_AIR_DURATION.get());
         config.putInt("DapTimes", DAP_TIMES.get());
