@@ -2,6 +2,7 @@ package com.mafuyu404.moveslikemafuyu.event;
 
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
+import com.mafuyu404.moveslikemafuyu.registry.ModEffects;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
@@ -28,7 +29,8 @@ public class AutoDodgeEvent {
     private static final int EMERGENCY_COOLDOWN_TICKS = 6;
     private static final int TEMPORARY_CRAW_TICKS = 8;
     private static final int PROJECTILE_JOIN_SCAN_TICKS = 3;
-    private static final int DODGE_PATH_CHECK_TICKS = 4;
+    private static final int DODGE_PATH_CHECK_STEPS = 4;
+    private static final int DODGE_PATH_PREDICT_TICKS = 4;
     private static final double DODGE_LEAD_TICKS = 5.5;
     private static final double MIN_PROJECTILE_SPEED_SQR = 0.0025;
     private static final double DODGE_TARGET_SPEED = 0.475;
@@ -42,6 +44,7 @@ public class AutoDodgeEvent {
     public static void onClientTick(TickEvent.PlayerTickEvent event) {
         if (!Config.enable("AutoDodge")) return;
         Player player = event.player;
+        if (!hasAutoDodgeEffect(player)) return;
         if (event.phase == TickEvent.Phase.END && cooldown > 0) cooldown--;
         Projectile extraProjectile = projectileJoinScanTicks > 0 && joinedProjectile != null && joinedProjectile.isAlive() ? joinedProjectile : null;
         tryAutoDodge(player, true, extraProjectile);
@@ -53,6 +56,7 @@ public class AutoDodgeEvent {
         if (!Config.enable("AutoDodge") || !(event.getEntity() instanceof Projectile projectile)) return;
         Player player = Minecraft.getInstance().player;
         if (player == null || player.level() != event.getLevel()) return;
+        if (!hasAutoDodgeEffect(player)) return;
         joinedProjectile = projectile;
         projectileJoinScanTicks = PROJECTILE_JOIN_SCAN_TICKS;
         tryAutoDodge(player, false, projectile);
@@ -114,6 +118,10 @@ public class AutoDodgeEvent {
         } else {
             handleLowerBodyThreat(player, projectiles, bestDirection);
         }
+    }
+
+    private static boolean hasAutoDodgeEffect(Player player) {
+        return player != null && player.hasEffect(ModEffects.AUTO_DODGE.get());
     }
 
     private static List<Projectile> getProjectilesInReach(Player player) {
@@ -314,13 +322,41 @@ public class AutoDodgeEvent {
         double speed = horizontalMotion.length();
         if (speed < 1.0E-6) return isSafeFromProjectiles(baseBox, projectiles);
 
-        for (int tick = 1; tick <= DODGE_PATH_CHECK_TICKS; tick++) {
-            double distance = Math.min(candidate.distance, speed * tick);
+        for (int step = 1; step <= DODGE_PATH_CHECK_STEPS; step++) {
+            double distance = candidate.distance * step / DODGE_PATH_CHECK_STEPS;
+            double arrivalTick = Math.max(1, distance / speed);
             AABB stepBox = baseBox.move(horizontal.scale(distance));
             if (!player.level().noCollision(player, stepBox)) return false;
-            if (!isSafeFromProjectiles(stepBox, projectiles)) return false;
+            if (!isSafeAtDodgeStep(stepBox, projectiles, arrivalTick)) return false;
         }
         return true;
+    }
+
+    private static boolean isSafeAtDodgeStep(AABB targetBox, List<Projectile> projectiles, double arrivalTick) {
+        for (Projectile projectile : projectiles) {
+            if (predictHitNearTick(projectile, targetBox, arrivalTick).isPresent()) return false;
+        }
+        return true;
+    }
+
+    private static Optional<Vec3> predictHitNearTick(Projectile projectile, AABB targetBox, double arrivalTick) {
+        Vec3 velocity = projectile.getDeltaMovement();
+        if (velocity.lengthSqr() < MIN_PROJECTILE_SPEED_SQR) return Optional.empty();
+        AABB expandedTarget = targetBox.inflate(projectile.getBbWidth() * 0.5 + HIT_MARGIN, HIT_MARGIN, projectile.getBbWidth() * 0.5 + HIT_MARGIN);
+        Vec3 position = projectile.position();
+        Vec3 motion = velocity;
+        int minTick = Math.max(0, (int) Math.floor(arrivalTick) - 1);
+        int maxTick = Math.min(PREDICT_TICKS, minTick + DODGE_PATH_PREDICT_TICKS);
+        for (int tick = 0; tick < maxTick; tick++) {
+            Vec3 next = position.add(motion);
+            if (tick >= minTick) {
+                Optional<Vec3> hit = expandedTarget.clip(position, next);
+                if (hit.isPresent()) return hit;
+            }
+            position = next;
+            motion = nextProjectileMotion(projectile, motion);
+        }
+        return Optional.empty();
     }
 
     private static void dodge(Player player, Candidate candidate) {

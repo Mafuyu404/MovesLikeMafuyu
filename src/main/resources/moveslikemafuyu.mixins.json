@@ -6,6 +6,7 @@
   "refmap": "moveslikemafuyu.refmap.json",
   "mixins": [
     "FireworkMixin",
+    "HeartOfTheSeaFoodMixin",
     "ShiftMixin",
     "LivingEntityMixin"
   ],

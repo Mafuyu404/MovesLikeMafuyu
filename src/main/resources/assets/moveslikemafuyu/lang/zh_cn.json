@@ -7,5 +7,7 @@
   "smartkeyprompts.moveslikemafuyu.swimming_boost": "水中推进",
   "smartkeyprompts.moveslikemafuyu.swimming_push": "水上漂",
 
-  "smartkeyprompts.moveslikemafuyu.leap": "飞扑"
+  "smartkeyprompts.moveslikemafuyu.leap": "飞扑",
+
+  "effect.moveslikemafuyu.auto_dodge": "企鹅感应"
 }

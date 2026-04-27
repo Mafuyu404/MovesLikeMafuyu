@@ -7,5 +7,6 @@
   "smartkeyprompts.moveslikemafuyu.swimming_boost": "Swimming Boost",
   "smartkeyprompts.moveslikemafuyu.swimming_push": "Swimming Push",
 
-  "smartkeyprompts.moveslikemafuyu.leap": "Leap"
+  "smartkeyprompts.moveslikemafuyu.leap": "Leap",
+  "effect.moveslikemafuyu.auto_dodge": "AutoDodge"
 }
