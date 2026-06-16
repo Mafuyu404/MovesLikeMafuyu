@@ -3,6 +3,7 @@ package com.mafuyu404.moveslikemafuyu.event;
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
 import com.mafuyu404.moveslikemafuyu.compat.KeyPrompts;
+import com.mafuyu404.moveslikemafuyu.compat.TaczCompat;
 import com.mafuyu404.moveslikemafuyu.network.CrawlPacket;
 import com.mafuyu404.moveslikemafuyu.network.NetworkHandler;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -100,6 +101,7 @@ public class CrawEvent {
         player.addTag("craw");
         player.setSprinting(false);
         player.setForcedPose(Pose.SWIMMING);
+        TaczCompat.syncCrawling(player, true);
         NetworkHandler.CHANNEL.sendToServer(new CrawlPacket(true));
     }
 
@@ -130,6 +132,7 @@ public class CrawEvent {
         player.removeTag("auto_craw");
         autoCrawReleaseTicks = 0;
         player.setForcedPose(null);
+        TaczCompat.syncCrawling(player, false);
         NetworkHandler.CHANNEL.sendToServer(new CrawlPacket(false));
     }
 

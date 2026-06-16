@@ -38,11 +38,17 @@ public class TagMessage {
                 if (msg.tag.equals("craw")) {
                     player.setForcedPose(Pose.SWIMMING);
                 }
+                if (msg.tag.equals("roll_shift")) {
+                    player.setShiftKeyDown(true);
+                }
             }
             else {
                 player.removeTag(msg.tag);
                 if (msg.tag.equals("craw")) {
                     player.setForcedPose(null);
+                }
+                if (msg.tag.equals("roll_shift")) {
+                    player.setShiftKeyDown(false);
                 }
             }
         });

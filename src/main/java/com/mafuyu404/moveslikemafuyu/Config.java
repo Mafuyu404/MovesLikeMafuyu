@@ -19,6 +19,7 @@ public class Config {
     public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_DAP;
     public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_SLIDE_REPEAT;
     public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_SLIDE_KNOCK;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_ROLL;
     public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_CLIMB;
     public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_CLIMB_JUMP;
     public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_FALLING_RESCUE;
@@ -60,6 +61,9 @@ public class Config {
         ENABLE_SLIDE_KNOCK = BUILDER
                 .comment("是否启用滑行撞飞实体：滑行过程中与实体碰撞会停下并撞飞对方。")
                 .define("enableSlideKnock", true);
+        ENABLE_ROLL = BUILDER
+                .comment("是否启用翻滚：疾跑时按下疾跑键向前翻滚。")
+                .define("enableRoll", true);
         BUILDER.pop();
         BUILDER.push("Climb Setting");
         ENABLE_CLIMB = BUILDER
@@ -154,6 +158,7 @@ public class Config {
         config.putBoolean("enableDap", ENABLE_DAP.get());
         config.putBoolean("enableSlideRepeat", ENABLE_SLIDE_REPEAT.get());
         config.putBoolean("enableSlideKnock", ENABLE_SLIDE_KNOCK.get());
+        config.putBoolean("enableRoll", ENABLE_ROLL.get());
         config.putBoolean("enableClimb", ENABLE_CLIMB.get());
         config.putBoolean("enableClimbJump", ENABLE_CLIMB_JUMP.get());
         config.putBoolean("enableFallingRescue", ENABLE_FALLING_RESCUE.get());

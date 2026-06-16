@@ -11,6 +11,8 @@
     "LivingEntityMixin"
   ],
   "client": [
+    "RollGameRendererMixin",
+    "RollLivingEntityRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

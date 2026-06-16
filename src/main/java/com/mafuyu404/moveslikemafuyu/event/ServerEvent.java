@@ -2,6 +2,7 @@ package com.mafuyu404.moveslikemafuyu.event;
 
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
+import com.mafuyu404.moveslikemafuyu.compat.TaczCompat;
 import com.mafuyu404.moveslikemafuyu.network.ConfigMessage;
 import com.mafuyu404.moveslikemafuyu.network.NetworkHandler;
 import net.minecraft.nbt.CompoundTag;
@@ -15,9 +16,16 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
 @Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID)
 public class ServerEvent {
     private static CompoundTag config = new CompoundTag();
+    private static final int ROLL_INVULNERABLE_TIME = 20;
+    private static final Set<UUID> rollInvulnerablePlayers = new HashSet<>();
+
     @SubscribeEvent
     public static void onConfigLoad(PlayerEvent.PlayerLoggedInEvent event) {
         Player player = event.getEntity();
@@ -27,6 +35,7 @@ public class ServerEvent {
         NetworkHandler.sendToClient((ServerPlayer) event.getEntity(), new ConfigMessage(config));
         player.removeTag("slide");
         player.removeTag("craw");
+        player.removeTag("roll");
     }
     @SubscribeEvent
     public static void serverSwim(TickEvent.PlayerTickEvent event) {
@@ -34,15 +43,26 @@ public class ServerEvent {
         Player player = event.player;
         if (player.isLocalPlayer() || player.isSpectator()) return;
 
+        if (player.getTags().contains("roll")) {
+            rollInvulnerablePlayers.add(player.getUUID());
+            player.invulnerableTime = Math.max(player.invulnerableTime, ROLL_INVULNERABLE_TIME);
+        } else if (rollInvulnerablePlayers.remove(player.getUUID()) && player.invulnerableTime <= ROLL_INVULNERABLE_TIME) {
+            player.invulnerableTime = 0;
+        }
+
         if (player.getTags().contains("craw")) {
             player.setForcedPose(Pose.SWIMMING);
+            TaczCompat.syncCrawling(player, true);
             return;
         }
         if (Config.enable("ShallowSwimming") && player.isInWater() && player.isSprinting()) {
             player.setForcedPose(Pose.SWIMMING);
             return;
         }
-        if (player.getForcedPose() == Pose.SWIMMING) player.setForcedPose(null);
+        if (player.getForcedPose() == Pose.SWIMMING) {
+            player.setForcedPose(null);
+            TaczCompat.syncCrawling(player, false);
+        }
     }
 
     @SubscribeEvent
@@ -50,6 +70,10 @@ public class ServerEvent {
         Player player = event.getEntity();
         if (player.isLocalPlayer()) return;
         player.removeTag("craw");
+        player.removeTag("roll");
+        rollInvulnerablePlayers.remove(player.getUUID());
+        if (player.invulnerableTime <= ROLL_INVULNERABLE_TIME) player.invulnerableTime = 0;
         player.setForcedPose(null);
+        TaczCompat.syncCrawling(player, false);
     }
 }
