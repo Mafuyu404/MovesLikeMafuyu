@@ -23,7 +23,7 @@ import java.util.UUID;
 @Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID)
 public class ServerEvent {
     private static CompoundTag config = new CompoundTag();
-    private static final int ROLL_INVULNERABLE_TIME = 20;
+    private static final int ROLL_INVULNERABLE_TIME = RollEvent.DURATION;
     private static final Set<UUID> rollInvulnerablePlayers = new HashSet<>();
 
     @SubscribeEvent

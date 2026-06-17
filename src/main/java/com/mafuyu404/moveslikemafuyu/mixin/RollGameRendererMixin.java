@@ -2,11 +2,12 @@ package com.mafuyu404.moveslikemafuyu.mixin;
 
 import com.mafuyu404.moveslikemafuyu.event.RollEvent;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,6 +31,7 @@ public class RollGameRendererMixin {
     private void rollCamera(float partialTicks, long finishTimeNano, PoseStack poseStack, CallbackInfo ci) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null || mainCamera.isDetached() || !RollEvent.isRolling(player)) return;
-        poseStack.mulPose(Axis.XP.rotationDegrees(RollEvent.getRollDegrees(partialTicks)));
+        Vec3 axis = RollEvent.getRollAxis();
+        poseStack.mulPose(new Quaternionf().rotationAxis((float) Math.toRadians(RollEvent.getRollDegrees(partialTicks)), (float) axis.x, (float) axis.y, (float) axis.z));
     }
 }

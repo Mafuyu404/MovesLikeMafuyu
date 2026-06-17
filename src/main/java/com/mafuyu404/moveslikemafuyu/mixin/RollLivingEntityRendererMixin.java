@@ -2,12 +2,13 @@ package com.mafuyu404.moveslikemafuyu.mixin;
 
 import com.mafuyu404.moveslikemafuyu.event.RollEvent;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,8 +21,9 @@ public class RollLivingEntityRendererMixin<T extends LivingEntity> {
         LocalPlayer player = Minecraft.getInstance().player;
         if (entity != player || !RollEvent.isRolling(player)) return;
         double centerY = player.getDimensions(Pose.CROUCHING).height * 0.5D;
+        Vec3 axis = RollEvent.getRollAxis();
         poseStack.translate(0.0D, centerY, 0.0D);
-        poseStack.mulPose(Axis.XP.rotationDegrees(-RollEvent.getRollDegrees(partialTicks)));
+        poseStack.mulPose(new Quaternionf().rotationAxis((float) Math.toRadians(-RollEvent.getRollDegrees(partialTicks)), (float) axis.x, (float) axis.y, (float) axis.z));
         poseStack.translate(0.0D, -centerY, 0.0D);
     }
 }
