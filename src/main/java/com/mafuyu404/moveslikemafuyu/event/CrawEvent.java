@@ -15,14 +15,11 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
 public class CrawEvent {
-    private static final int DOUBLE_PRESS_DELAY = 250;
-    private static final int JUMP_TIMER = 500;
     private static long lastShiftPressTime;
     private static long lastJumpPressTime;
     private static int autoCrawReleaseTicks;
@@ -65,13 +62,16 @@ public class CrawEvent {
             long currentTime = System.currentTimeMillis();
             if (player.getTags().contains("craw")) {
                 cancelCraw(player);
-            } else if (Config.enable("Craw") && currentTime - lastShiftPressTime < DOUBLE_PRESS_DELAY && player.onGround()) {
+            } else if (Config.enable("Craw") && currentTime - lastShiftPressTime < Config.CRAW_DOUBLE_PRESS_DELAY.get() && player.onGround()) {
                 startCraw(player);
             } else if (canLeap(player)) {
                 Vec3 lookDirection = player.getLookAngle();
-                double boost = 0.25;
                 player.setDeltaMovement(
-                    player.getDeltaMovement().add(lookDirection.x * boost, 0.15, lookDirection.z * boost)
+                    player.getDeltaMovement().add(
+                            lookDirection.x * Config.CRAW_LEAP_FORWARD_BOOST.get(),
+                            Config.CRAW_LEAP_VERTICAL_BOOST.get(),
+                            lookDirection.z * Config.CRAW_LEAP_FORWARD_BOOST.get()
+                    )
                 );
                 startCraw(player);
                 lastJumpPressTime *= 10;
@@ -120,9 +120,13 @@ public class CrawEvent {
         if (horizontal.lengthSqr() < 1.0E-6) horizontal = new Vec3(0, 0, 1);
         horizontal = horizontal.normalize();
         player.setSprinting(true);
-        player.setDeltaMovement(player.getDeltaMovement().add(horizontal.x * 0.35, 0.42, horizontal.z * 0.35));
+        player.setDeltaMovement(player.getDeltaMovement().add(
+                horizontal.x * Config.LEAP_FORWARD_BOOST.get(),
+                Config.LEAP_VERTICAL_BOOST.get(),
+                horizontal.z * Config.LEAP_FORWARD_BOOST.get()
+        ));
         player.addTag("auto_craw");
-        autoCrawReleaseTicks = 8;
+        autoCrawReleaseTicks = Config.LEAP_AUTO_CRAW_TICKS.get();
         startCraw(player);
         lastJumpPressTime = 0;
     }
@@ -140,15 +144,11 @@ public class CrawEvent {
         return player.getTags().contains("auto_craw");
     }
 
-    @SubscribeEvent
-    public static void onConfigLoad(PlayerEvent.PlayerLoggedInEvent event) {
-    }
-
     public static boolean canLeap(Player player) {
         return Config.enable("Leap")
                 && !player.getTags().contains("craw")
                 && player.isSprinting()
-                && System.currentTimeMillis() - lastJumpPressTime < JUMP_TIMER
+                && System.currentTimeMillis() - lastJumpPressTime < Config.LEAP_JUMP_TIMER.get()
                 && player.getDeltaMovement().y > 0
                 && !player.onGround()
                 && !player.isInWater();

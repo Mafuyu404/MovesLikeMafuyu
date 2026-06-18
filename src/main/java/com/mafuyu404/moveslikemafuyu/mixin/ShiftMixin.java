@@ -1,5 +1,6 @@
 package com.mafuyu404.moveslikemafuyu.mixin;
 
+import com.mafuyu404.moveslikemafuyu.Config;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
@@ -20,7 +21,9 @@ public abstract class ShiftMixin extends LivingEntity {
 
     @Inject(method = "maybeBackOffFromEdge", at = @At("HEAD"), cancellable = true)
     private void redirectShiftCheck(Vec3 p_36201_, MoverType p_36202_, CallbackInfoReturnable<Vec3> cir) {
-        if (this.isFallFlying() && this.onGround()) {
+        boolean ignoreSlideEdge = Config.enable("SlideIgnoreEdgeProtection") && this.getTags().contains("slide");
+        boolean ignoreRollEdge = Config.enable("RollIgnoreEdgeProtection") && this.getTags().contains("roll");
+        if ((ignoreSlideEdge || ignoreRollEdge) && this.onGround()) {
             cir.setReturnValue(p_36201_);
         }
     }

@@ -19,19 +19,6 @@ import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
 public class RollEvent {
-    private static final int DOUBLE_PRESS_DELAY = 250;
-    private static final int AIR_ROLL_TIMER = 500;
-    public static final int DURATION = 14;
-    private static final int SHIFT_START_TICK = 3;
-    private static final int SHIFT_END_TICK = 10;
-    private static final int COOLDOWN = 0;
-    private static final double ACTION_SPEED_MULTIPLIER = 1.2;
-    private static final double SPEED_MULTIPLIER = 1.2;
-    private static final double START_SPEED = 0.225;
-    private static final double PEAK_SPEED = 0.35;
-    private static final double END_SPEED = 0.16;
-    private static final double AIR_ROLL_VERTICAL_SPEED = 0.19;
-
     private static double timer;
     private static int cooldown;
     private static float previousProgress;
@@ -56,15 +43,19 @@ public class RollEvent {
 
         previousProgress = progress;
         if (player.getTags().contains("roll")) {
-            timer += ACTION_SPEED_MULTIPLIER;
-            progress = (float) Math.min(1.0, timer / DURATION);
+            if (!Config.enable("Roll")) {
+                cancelRoll(player);
+                return;
+            }
+            timer += Config.ROLL_ACTION_SPEED_MULTIPLIER.get();
+            progress = (float) Math.min(1.0, timer / Config.ROLL_DURATION.get());
             if (!rollMovementEnabled && player.onGround()) {
                 rollMovementEnabled = true;
             }
             if (rollMovementEnabled) applyRollMovement(player, progress);
-            setRollShift(player, timer >= SHIFT_START_TICK && timer <= SHIFT_END_TICK);
+            setRollShift(player, timer >= Config.ROLL_SHIFT_START_TICK.get() && timer <= Config.ROLL_SHIFT_END_TICK.get());
             player.setSprinting(true);
-            if (timer > DURATION || player.isInWater() || player.isFallFlying()) {
+            if (timer > Config.ROLL_DURATION.get() || player.isInWater() || player.isFallFlying()) {
                 cancelRoll(player);
             }
         } else {
@@ -84,10 +75,15 @@ public class RollEvent {
 
         if (event.getKey() == options.keySprint.getKey().getValue()) {
             long currentTime = System.currentTimeMillis();
-            if (canRoll(player) && hasMovementInput(options) && player.isSprinting()) {
+            boolean sprintRollPressed = canRoll(player)
+                    && hasMovementInput(options)
+                    && player.isSprinting()
+                    && (!Config.enable("SprintRollDoubleTapTrigger")
+                    || currentTime - lastSprintPressTime < Config.ROLL_DOUBLE_PRESS_DELAY.get());
+            if (sprintRollPressed) {
                 startRoll(player);
                 lastSprintPressTime = 0;
-            } else if (canRoll(player) && hasMovementInput(options) && currentTime - lastSprintPressTime < DOUBLE_PRESS_DELAY) {
+            } else if (canRoll(player) && hasMovementInput(options) && currentTime - lastSprintPressTime < Config.ROLL_DOUBLE_PRESS_DELAY.get()) {
                 startRoll(player);
                 lastSprintPressTime = 0;
             } else {
@@ -117,7 +113,7 @@ public class RollEvent {
         NetworkHandler.CHANNEL.sendToServer(new TagMessage("roll", true));
 
         if (!player.onGround() && rollMovementEnabled) {
-            player.setDeltaMovement(player.getDeltaMovement().add(0, AIR_ROLL_VERTICAL_SPEED, 0));
+            player.setDeltaMovement(player.getDeltaMovement().add(0, Config.ROLL_AIR_VERTICAL_SPEED.get(), 0));
         }
         if (rollMovementEnabled) applyRollMovement(player, 0.0f);
         player.playSound(SoundEvents.ARMOR_EQUIP_LEATHER, 0.6f, 1.2f);
@@ -128,7 +124,7 @@ public class RollEvent {
         player.removeTag("roll");
         setRollShift(player, false);
         NetworkHandler.CHANNEL.sendToServer(new TagMessage("roll", false));
-        cooldown = COOLDOWN;
+        cooldown = Config.ROLL_COOLDOWN.get();
         previousProgress = 0;
         progress = 0;
         rollMovementEnabled = false;
@@ -152,6 +148,7 @@ public class RollEvent {
         return Config.enable("Roll")
                 && cooldown <= 0
                 && player.isLocalPlayer()
+                && (player.onGround() || Config.enable("AirRoll"))
                 && !player.isInWater()
                 && !player.isFallFlying()
                 && !player.getTags().contains("roll")
@@ -162,7 +159,7 @@ public class RollEvent {
     private static boolean canAirRoll(Player player, long currentTime) {
         return !player.onGround()
                 && player.getDeltaMovement().y > 0
-                && currentTime - lastJumpPressTime < AIR_ROLL_TIMER;
+                && currentTime - lastJumpPressTime < Config.ROLL_AIR_TIMER.get();
     }
 
     private static Vec3 horizontalDirection(Player player) {
@@ -197,18 +194,18 @@ public class RollEvent {
     private static void applyRollMovement(Player player, float progress) {
         if (rollDirection.lengthSqr() < 1.0E-6) rollDirection = horizontalDirection(player);
         Vec3 movement = player.getDeltaMovement();
-        double speed = getRollSpeed(progress) * SPEED_MULTIPLIER;
+        double speed = getRollSpeed(progress) * Config.ROLL_SPEED_MULTIPLIER.get();
         player.setDeltaMovement(rollDirection.x * speed, movement.y, rollDirection.z * speed);
     }
 
     private static double getRollSpeed(float progress) {
         if (progress < 0.25f) {
-            return lerp(START_SPEED, PEAK_SPEED, progress / 0.25f);
+            return lerp(Config.ROLL_START_SPEED.get(), Config.ROLL_PEAK_SPEED.get(), progress / 0.25f);
         }
         if (progress > 0.75f) {
-            return lerp(PEAK_SPEED, END_SPEED, (progress - 0.75f) / 0.25f);
+            return lerp(Config.ROLL_PEAK_SPEED.get(), Config.ROLL_END_SPEED.get(), (progress - 0.75f) / 0.25f);
         }
-        return PEAK_SPEED;
+        return Config.ROLL_PEAK_SPEED.get();
     }
 
     private static double lerp(double start, double end, double delta) {

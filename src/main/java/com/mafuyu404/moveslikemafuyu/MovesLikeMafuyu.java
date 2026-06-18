@@ -17,7 +17,7 @@ public class MovesLikeMafuyu {
         ModEffects.register(FMLJavaModLoadingContext.get().getModEventBus());
         NetworkHandler.register();
         ModLoadingContext.get().registerConfig(
-                ModConfig.Type.COMMON,
+                ModConfig.Type.SERVER,
                 Config.SPEC
         );
     }

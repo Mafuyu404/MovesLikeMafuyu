@@ -21,7 +21,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -30,19 +29,15 @@ import java.util.List;
 
 @Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
 public class SlideEvent {
-    private static int TIMER;
-    private static int AIR_TIMER;
-    private static int COOLDOWN;
-    private static int DAP_TIMES;
-    private static double timer = TIMER;
-    private static int air_timer = AIR_TIMER;
-    public static int cooldown = COOLDOWN;
-    public static int dap_times = DAP_TIMES;
+    private static double timer;
+    private static int air_timer;
+    public static int cooldown;
+    public static int dap_times;
     public static double dap_motion = 1;
     private static boolean canDap = false;
     private static boolean dap_refreshed = false;
-    private static final long Knock_Delay = 500;
     private static long lastKnockTime = 0;
+    private static long lastShiftPressTime;
     private static CameraType storedCameraType;
     @SubscribeEvent
     public static void slideAction(TickEvent.PlayerTickEvent event) {
@@ -50,7 +45,7 @@ public class SlideEvent {
         if (!player.isLocalPlayer() || player.isSpectator()) return;
         Options options = Minecraft.getInstance().options;
 
-        if (cooldown > 0 && cooldown <= COOLDOWN) {
+        if (cooldown > 0 && cooldown <= Config.SLIDE_COOLDOWN.get()) {
             cooldown--;
             double speed = player.getDeltaMovement().length();
             if (!player.isSprinting()) cooldown--;
@@ -71,10 +66,10 @@ public class SlideEvent {
             options.keyShift.setDown(true);
             Vec3 motion = player.getDeltaMovement();
             Vec3 lookDirection = player.getLookAngle();
-            if (dap_times == DAP_TIMES && player.isInWater() && !canDap) {
+            if (dap_times == Config.DAP_TIMES.get() && player.isInWater() && !canDap) {
                 dap_times--;
                 player.setDeltaMovement(
-                    motion.add(0, 0.5, 0)
+                    motion.add(0, Config.SLIDE_INITIAL_DAP_VERTICAL_BOOST.get(), 0)
                 );
             }
             else if (player.isInWater() && canDap && Config.enable("Dap")) {
@@ -82,28 +77,31 @@ public class SlideEvent {
                 canDap = false;
                 dap_times--;
                 player.setDeltaMovement(
-                    motion.add(0, 0.7 * dap_motion, 0)
+                    motion.add(0, Config.SLIDE_DAP_VERTICAL_BOOST.get() * dap_motion, 0)
                 );
-                dap_motion *= 0.92;
+                dap_motion *= Config.SLIDE_DAP_MOTION_DECAY.get();
             }
             if (!player.onGround() && !player.isInWater()) {
-                if (dap_times > 0 && dap_times != DAP_TIMES && !canDap) {
+                if (dap_times > 0 && dap_times != Config.DAP_TIMES.get() && !canDap) {
                     canDap = true;
                     dap_refreshed = false;
-                    double boost = 0.1;
                     player.setDeltaMovement(
-                        motion.add(lookDirection.x*boost, 0, lookDirection.z*boost)
+                        motion.add(
+                                lookDirection.x * Config.SLIDE_AIR_FORWARD_BOOST.get(),
+                                0,
+                                lookDirection.z * Config.SLIDE_AIR_FORWARD_BOOST.get()
+                        )
                     );
                 }
                 // 仅增加下坠
                 player.setDeltaMovement(
-                    player.getDeltaMovement().add(0, -0.025, 0)
+                    player.getDeltaMovement().add(0, Config.SLIDE_AIR_FALL_ACCELERATION.get(), 0)
                 );
                 air_timer--;
-                if (Config.enable("SlideRepeat")) timer = TIMER;
+                if (Config.enable("SlideRepeat")) timer = Config.SLIDE_DURATION.get();
             } else {
                 // 在地上滑行
-                air_timer = AIR_TIMER; // 落地重置滞空时间
+                air_timer = Config.SLIDE_AIR_DURATION.get(); // 落地重置滞空时间
                 if (player.level().getBlockState(player.blockPosition().below()).is(BlockTags.ICE)) timer += 0.5;
                 timer--;
                 if (player.getDeltaMovement().y > 0) {
@@ -131,9 +129,13 @@ public class SlideEvent {
             }
         }
         if (event.getKey() == options.keyShift.getKey().getValue()) {
-            if (canSlide(player)) {
+            long currentTime = System.currentTimeMillis();
+            boolean doubleTapSlide = !Config.enable("SlideDoubleTapTrigger")
+                    || currentTime - lastShiftPressTime < Config.CRAW_DOUBLE_PRESS_DELAY.get();
+            if (canSlide(player) && doubleTapSlide) {
                 if (!player.getTags().contains("craw")) startSlide(player);
             }
+            lastShiftPressTime = currentTime;
         }
         if (event.getKey() == options.keyDown.getKey().getValue()) {
             if (player.getTags().contains("slide")) {
@@ -148,7 +150,7 @@ public class SlideEvent {
         if (!player.isLocalPlayer() || player.isSpectator()) return;
         Options options = Minecraft.getInstance().options;
         if (!player.getTags().contains("slide")) return;
-        if (System.currentTimeMillis() - lastKnockTime < Knock_Delay) return;
+        if (System.currentTimeMillis() - lastKnockTime < Config.SLIDE_KNOCK_DELAY.get()) return;
         List<Entity> AllEntities = player.level().getEntities(player, player.getBoundingBox().inflate(0.1));
         if (AllEntities.isEmpty()) return;
         ArrayList<Entity> entities = new ArrayList<>();
@@ -167,13 +169,6 @@ public class SlideEvent {
         NetworkHandler.CHANNEL.sendToServer(new KnockMessage(entityId));
         lastKnockTime = System.currentTimeMillis();
     }
-    @SubscribeEvent
-    public static void onConfigLoad(PlayerEvent.PlayerLoggedInEvent event) {
-        TIMER = Config.ConfigCache.getInt("SlideDuration");
-        AIR_TIMER = Config.ConfigCache.getInt("SlideAirDuration");
-        COOLDOWN = Config.ConfigCache.getInt("SlideCooldown");
-        DAP_TIMES = Config.ConfigCache.getInt("DapTimes");
-    }
     public static void startSlide(Player player) {
         startSlide(player, player.getLookAngle());
     }
@@ -181,9 +176,9 @@ public class SlideEvent {
     public static void startSlide(Player player, Vec3 direction) {
         Options options = Minecraft.getInstance().options;
         if (!Config.enable("Slide") || cooldown > 0) return;
-        timer = TIMER;
-        air_timer = AIR_TIMER;
-        dap_times = DAP_TIMES;
+        timer = Config.SLIDE_DURATION.get();
+        air_timer = Config.SLIDE_AIR_DURATION.get();
+        dap_times = Config.DAP_TIMES.get();
         canDap = false;
         dap_motion = 1;
         storedCameraType = options.getCameraType();
@@ -191,10 +186,13 @@ public class SlideEvent {
         player.setSprinting(true);
         player.addTag("slide");
         Vec3 lookDirection = horizontalDirection(direction);
-        double boost = 0.5;
         player.startFallFlying();
         player.setDeltaMovement(
-            player.getDeltaMovement().add(lookDirection.x * boost, 0, lookDirection.z * boost)
+            player.getDeltaMovement().add(
+                    lookDirection.x * Config.SLIDE_START_BOOST.get(),
+                    0,
+                    lookDirection.z * Config.SLIDE_START_BOOST.get()
+            )
         );
         options.keyShift.setDown(true);
         player.playSound(
@@ -222,7 +220,7 @@ public class SlideEvent {
             player.setDeltaMovement(motion.x, 0, motion.z);
         }
         player.removeTag("slide");
-        cooldown = COOLDOWN;
+        cooldown = Config.SLIDE_COOLDOWN.get();
     }
     @SubscribeEvent
     public static void avoidDamage(LivingHurtEvent event) {

@@ -1,192 +1,197 @@
 package com.mafuyu404.moveslikemafuyu;
 
-import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.event.server.ServerStartedEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
-@Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class Config {
-
-    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_SLIDE;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_DAP;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_SLIDE_REPEAT;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_SLIDE_KNOCK;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_ROLL;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_CLIMB;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_CLIMB_JUMP;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_FALLING_RESCUE;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_SHALLOW_SWIMMING;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_SWIMMING_BOOST;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_FREESTYLE;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_SWIMMING_PUSH;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_CRAW;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_CRAW_SLIDE;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_LEAP;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_JUMP_CANCEL_CRAW;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> ENABLE_AUTO_DODGE;
-    public static final ForgeConfigSpec.ConfigValue<Integer> SLIDE_DURATION;
-    public static final ForgeConfigSpec.ConfigValue<Integer> SLIDE_AIR_DURATION;
-    public static final ForgeConfigSpec.ConfigValue<Integer> DAP_TIMES;
-    public static final ForgeConfigSpec.ConfigValue<Integer> SLIDE_COOLDOWN;
-    public static final ForgeConfigSpec.ConfigValue<Integer> CLIMB_JUMP_COOLDOWN;
-    public static final ForgeConfigSpec.ConfigValue<Integer> SWIMMING_BOOST_COOLDOWN;
-    public static final ForgeConfigSpec.ConfigValue<Integer> SWIMMING_BOOST_AIR_COST;
-    public static final ForgeConfigSpec.ConfigValue<List<? extends String>>  SLIDE_KNOCK_BLACKLIST;
-    public static final ForgeConfigSpec.ConfigValue<List<? extends String>>  CLIMB_BLOCK_WHITELIST;
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
+    private static final Map<String, ForgeConfigSpec.BooleanValue> BOOLEAN_VALUES = new LinkedHashMap<>();
+
+    public static final ForgeConfigSpec.BooleanValue ENABLE_SLIDE;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_DAP;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_SLIDE_REPEAT;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_SLIDE_KNOCK;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_SLIDE_IGNORE_EDGE_PROTECTION;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_SLIDE_DOUBLE_TAP_TRIGGER;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_ROLL;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_AIR_ROLL;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_ROLL_INVULNERABILITY;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_ROLL_CAMERA;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_ROLL_IGNORE_EDGE_PROTECTION;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_SPRINT_ROLL_DOUBLE_TAP_TRIGGER;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_CLIMB;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_CLIMB_JUMP;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_FALLING_RESCUE;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_SHALLOW_SWIMMING;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_SWIMMING_BOOST;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_FREESTYLE;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_SWIMMING_PUSH;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_CRAW;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_CRAW_SLIDE;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_LEAP;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_JUMP_CANCEL_CRAW;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_AUTO_DODGE;
+
+    public static final ForgeConfigSpec.IntValue SLIDE_DURATION;
+    public static final ForgeConfigSpec.IntValue SLIDE_AIR_DURATION;
+    public static final ForgeConfigSpec.IntValue DAP_TIMES;
+    public static final ForgeConfigSpec.IntValue SLIDE_COOLDOWN;
+    public static final ForgeConfigSpec.IntValue CLIMB_JUMP_COOLDOWN;
+    public static final ForgeConfigSpec.IntValue SWIMMING_BOOST_COOLDOWN;
+    public static final ForgeConfigSpec.IntValue SWIMMING_BOOST_AIR_COST;
+    public static final ForgeConfigSpec.DoubleValue SWIMMING_BOOST_STRENGTH;
+
+    public static final ForgeConfigSpec.IntValue ROLL_DOUBLE_PRESS_DELAY;
+    public static final ForgeConfigSpec.IntValue ROLL_AIR_TIMER;
+    public static final ForgeConfigSpec.IntValue ROLL_DURATION;
+    public static final ForgeConfigSpec.IntValue ROLL_SHIFT_START_TICK;
+    public static final ForgeConfigSpec.IntValue ROLL_SHIFT_END_TICK;
+    public static final ForgeConfigSpec.IntValue ROLL_COOLDOWN;
+    public static final ForgeConfigSpec.DoubleValue ROLL_ACTION_SPEED_MULTIPLIER;
+    public static final ForgeConfigSpec.DoubleValue ROLL_SPEED_MULTIPLIER;
+    public static final ForgeConfigSpec.DoubleValue ROLL_START_SPEED;
+    public static final ForgeConfigSpec.DoubleValue ROLL_PEAK_SPEED;
+    public static final ForgeConfigSpec.DoubleValue ROLL_END_SPEED;
+    public static final ForgeConfigSpec.DoubleValue ROLL_AIR_VERTICAL_SPEED;
+
+    public static final ForgeConfigSpec.IntValue CRAW_DOUBLE_PRESS_DELAY;
+    public static final ForgeConfigSpec.IntValue LEAP_JUMP_TIMER;
+    public static final ForgeConfigSpec.IntValue LEAP_AUTO_CRAW_TICKS;
+    public static final ForgeConfigSpec.DoubleValue LEAP_FORWARD_BOOST;
+    public static final ForgeConfigSpec.DoubleValue LEAP_VERTICAL_BOOST;
+    public static final ForgeConfigSpec.DoubleValue CRAW_LEAP_FORWARD_BOOST;
+    public static final ForgeConfigSpec.DoubleValue CRAW_LEAP_VERTICAL_BOOST;
+
+    public static final ForgeConfigSpec.DoubleValue SLIDE_START_BOOST;
+    public static final ForgeConfigSpec.DoubleValue SLIDE_AIR_FORWARD_BOOST;
+    public static final ForgeConfigSpec.DoubleValue SLIDE_AIR_FALL_ACCELERATION;
+    public static final ForgeConfigSpec.DoubleValue SLIDE_INITIAL_DAP_VERTICAL_BOOST;
+    public static final ForgeConfigSpec.DoubleValue SLIDE_DAP_VERTICAL_BOOST;
+    public static final ForgeConfigSpec.DoubleValue SLIDE_DAP_MOTION_DECAY;
+    public static final ForgeConfigSpec.IntValue SLIDE_KNOCK_DELAY;
+
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> SLIDE_KNOCK_BLACKLIST;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> CLIMB_BLOCK_WHITELIST;
 
     public static final ForgeConfigSpec SPEC;
-
-    public static CompoundTag ConfigCache = new CompoundTag();
-
     static {
-        BUILDER.push("Slide Setting");
-        ENABLE_SLIDE = BUILDER
-                .comment("是否启用滑行：疾跑过程中按下潜行键即可贴地滑行。")
-                .define("enableSlide", true);
-        ENABLE_DAP = BUILDER
-                .comment("是否启用打水漂：滑行到水面时向前跃起。")
-                .define("enableDap", true);
-        ENABLE_SLIDE_REPEAT = BUILDER
-                .comment("是否启用滑行重置时间：滑行到空中时重置持续时间。")
-                .define("enableSlideRepeat", true);
-        ENABLE_SLIDE_KNOCK = BUILDER
-                .comment("是否启用滑行撞飞实体：滑行过程中与实体碰撞会停下并撞飞对方。")
-                .define("enableSlideKnock", true);
-        ENABLE_ROLL = BUILDER
-                .comment("是否启用翻滚：疾跑时按下疾跑键向前翻滚。")
-                .define("enableRoll", true);
+        BUILDER.push("slide");
+        ENABLE_SLIDE = defineBoolean("enableSlide", true, "是否启用滑铲：疾跑时按潜行键触发。", "Enable slide: press sneak while sprinting to slide.");
+        ENABLE_DAP = defineBoolean("enableDap", true, "是否启用打水漂：滑铲入水时向上弹起。", "Enable water dap while sliding over water.");
+        ENABLE_SLIDE_REPEAT = defineBoolean("enableSlideRepeat", true, "是否在滑铲滞空时刷新滑铲持续时间。", "Refresh slide duration while sliding in the air.");
+        ENABLE_SLIDE_KNOCK = defineBoolean("enableSlideKnock", true, "是否启用滑铲撞飞实体。", "Knock living entities hit during a slide.");
+        ENABLE_SLIDE_IGNORE_EDGE_PROTECTION = defineBoolean("enableSlideIgnoreEdgeProtection", true, "滑铲时是否无视潜行的方块边缘保护。", "Ignore sneak edge protection while sliding.");
+        ENABLE_SLIDE_DOUBLE_TAP_TRIGGER = defineBoolean("enableSlideDoubleTapTrigger", false, "是否需要双击潜行键才触发滑铲。", "Require double tapping sneak to start slide.");
+        ENABLE_ROLL = defineBoolean("enableRoll", true, "是否启用翻滚总开关。", "Enable roll.");
+        ENABLE_AIR_ROLL = defineBoolean("enableAirRoll", true, "是否允许在空中触发翻滚。", "Enable triggering roll while airborne.");
+        ENABLE_ROLL_INVULNERABILITY = defineBoolean("enableRollInvulnerability", true, "翻滚时是否获得无敌帧。", "Enable invulnerability frames during roll.");
+        ENABLE_ROLL_CAMERA = defineBoolean("enableRollCamera", true, "翻滚时是否旋转摄像机。", "Enable camera rotation during roll.");
+        ENABLE_ROLL_IGNORE_EDGE_PROTECTION = defineBoolean("enableRollIgnoreEdgeProtection", true, "翻滚时是否无视潜行的方块边缘保护。", "Ignore sneak edge protection while rolling.");
+        ENABLE_SPRINT_ROLL_DOUBLE_TAP_TRIGGER = defineBoolean("enableSprintRollDoubleTapTrigger", false, "疾跑中是否需要双击疾跑键才触发翻滚。", "Require double tapping sprint to roll while already sprinting.");
         BUILDER.pop();
-        BUILDER.push("Climb Setting");
-        ENABLE_CLIMB = BUILDER
-                .comment("是否启用攀爬：跳起后可爬上两格高的障碍。")
-                .define("enableClimb", true);
-        ENABLE_CLIMB_JUMP = BUILDER
-                .comment("是否启用攀爬跳：攀爬中并按着潜行键时按下跳跃键往上起跳。")
-                .define("enableClimbJump", true);
-        ENABLE_FALLING_RESCUE = BUILDER
-                .comment("是否启用失足抢救：在失足后的短暂时间内按潜行键即可站稳。")
-                .define("enableFallingRescue", true);
+
+        BUILDER.push("climb");
+        ENABLE_CLIMB = defineBoolean("enableClimb", true, "是否启用攀爬。", "Enable wall climb.");
+        ENABLE_CLIMB_JUMP = defineBoolean("enableClimbJump", true, "是否启用攀爬跳。", "Enable jumping from climbable surfaces while sneaking.");
+        ENABLE_FALLING_RESCUE = defineBoolean("enableFallingRescue", true, "是否启用失足抢救。", "Enable falling rescue on climbable surfaces.");
         BUILDER.pop();
-        BUILDER.push("Swimming Setting");
-        ENABLE_SHALLOW_SWIMMING = BUILDER
-                .comment("是否启用浅水游泳：在一格深的水中按疾跑键进入游泳状态。")
-                .define("enableShallowSwimming", true);
-        ENABLE_SWIMMING_BOOST = BUILDER
-                .comment("是否启用水中推进：在游泳状态下按疾跑键消耗氧气向前推进一段距离。")
-                .define("enableSwimmingBoost", true);
-        ENABLE_FREESTYLE = BUILDER
-                .comment("是否启用自由泳：径直往上游到水面后进入可同时呼吸和游泳的状态。")
-                .define("enableFreestyle", true);
-        ENABLE_SWIMMING_PUSH = BUILDER
-                .comment("是否启用水上漂：在自由泳状态下按跳跃向前跃出并进入滑行状态。")
-                .define("enableSwimmingPush", true);
+
+        BUILDER.push("swimming");
+        ENABLE_SHALLOW_SWIMMING = defineBoolean("enableShallowSwimming", true, "是否启用浅水游泳。", "Enable sprint swimming in shallow water.");
+        ENABLE_SWIMMING_BOOST = defineBoolean("enableSwimmingBoost", true, "是否启用水中推进。", "Enable sprint boost while swimming.");
+        ENABLE_FREESTYLE = defineBoolean("enableFreestyle", true, "是否启用水面自由泳。", "Enable freestyle surface swimming.");
+        ENABLE_SWIMMING_PUSH = defineBoolean("enableSwimmingPush", true, "是否允许从自由泳跳出并进入滑铲。", "Enable jumping from freestyle swimming into slide.");
         BUILDER.pop();
-        BUILDER.push("Craw Setting");
-        ENABLE_CRAW = BUILDER
-                .comment("是否启用爬行：双击潜行键进入爬行状态，单击退出。")
-                .define("enableCraw", true);
-        ENABLE_CRAW_SLIDE = BUILDER
-                .comment("是否启用爬行中滑行：爬行状态中按下疾跑键触发滑行。")
-                .define("enableCrawSlide", true);
-        ENABLE_LEAP = BUILDER
-                .comment("是否启用飞扑：疾跑跳跃后按下潜行键会触发飞扑并进入爬行状态。")
-                .define("enableLeap", true);
-        ENABLE_JUMP_CANCEL_CRAW = BUILDER
-                .comment("是否启用跳跃取消爬行：跳跃后短时间内进入爬行状态从而触发飞扑。")
-                .define("enableJumpCancelCraw", false);
+
+        BUILDER.push("crawling");
+        ENABLE_CRAW = defineBoolean("enableCraw", true, "是否启用趴下。", "Enable crawl.");
+        ENABLE_CRAW_SLIDE = defineBoolean("enableCrawSlide", true, "是否允许趴下时触发滑铲。", "Enable slide from crawl.");
+        ENABLE_LEAP = defineBoolean("enableLeap", true, "是否启用飞扑。", "Enable leap into crawl.");
+        ENABLE_JUMP_CANCEL_CRAW = defineBoolean("enableJumpCancelCraw", false, "是否允许跳跃取消趴下。", "Enable jump to cancel crawl.");
         BUILDER.pop();
-        BUILDER.push("Auto Dodge Setting");
-        ENABLE_AUTO_DODGE = BUILDER
-                .comment("Automatically dodge incoming projectiles around the player's reach range.")
-                .define("enableAutoDodge", true);
+
+        BUILDER.push("auto_dodge");
+        ENABLE_AUTO_DODGE = defineBoolean("enableAutoDodge", true, "是否启用自动闪避。", "Automatically dodge incoming projectiles.");
         BUILDER.pop();
-        BUILDER.push("Attribute Setting");
-        SLIDE_DURATION = BUILDER
-                .comment("滑行时间限制，默认为25， 一秒为20。")
-                .define("SlideDuration", 25);
-        SLIDE_AIR_DURATION = BUILDER
-                .comment("空中滑行时间限制，默认为30，一秒是20。")
-                .define("SlideAirDuration", 30);
-        DAP_TIMES = BUILDER
-                .comment("打水漂次数上限，默认为2。")
-                .define("DapTimes", 2);
-        SLIDE_COOLDOWN = BUILDER
-                .comment("滑行的冷却，默认为60，一秒为20。")
-                .define("SlideCooldown", 60);
-        CLIMB_JUMP_COOLDOWN = BUILDER
-                .comment("攀爬跳的冷却，默认为60，一秒为20。")
-                .define("ClimbJumpCooldown", 60);
-        SWIMMING_BOOST_COOLDOWN = BUILDER
-                .comment("水中推进的冷却，默认为60，一秒为20。")
-                .define("SwimmingBoostCooldown", 60);
-        SWIMMING_BOOST_AIR_COST = BUILDER
-                .comment("水中推进的氧气消耗，默认为30，氧气上限为300。")
-                .define("SwimmingBoostAirCost", 30);
+
+        BUILDER.push("attributes");
+        SLIDE_DURATION = defineInt("SlideDuration", 25, 0, 20 * 60, "滑铲持续时间，单位为 tick。", "Slide duration in ticks.");
+        SLIDE_AIR_DURATION = defineInt("SlideAirDuration", 30, 0, 20 * 60, "滑铲最大滞空时间，单位为 tick。", "Maximum slide air duration in ticks.");
+        DAP_TIMES = defineInt("DapTimes", 2, 0, 64, "打水漂次数上限。", "Maximum water dap count.");
+        SLIDE_COOLDOWN = defineInt("SlideCooldown", 60, 0, 20 * 60, "滑铲冷却时间，单位为 tick。", "Slide cooldown in ticks.");
+        CLIMB_JUMP_COOLDOWN = defineInt("ClimbJumpCooldown", 60, 0, 20 * 60, "攀爬跳冷却时间，单位为 tick。", "Climb jump cooldown in ticks.");
+        SWIMMING_BOOST_COOLDOWN = defineInt("SwimmingBoostCooldown", 60, 0, 20 * 60, "水中推进冷却时间，单位为 tick。", "Swimming boost cooldown in ticks.");
+        SWIMMING_BOOST_AIR_COST = defineInt("SwimmingBoostAirCost", 30, 0, 300, "水中推进消耗的氧气值。", "Air supply consumed by swimming boost.");
+        SWIMMING_BOOST_STRENGTH = defineDouble("SwimmingBoostStrength", 0.4, 0, 5, "水中推进强度。", "Swimming boost movement strength.");
         BUILDER.pop();
-        BUILDER.push("Blacklist Setting");
-        SLIDE_KNOCK_BLACKLIST = BUILDER
-                .comment("不会被滑行撞飞的实体。")
-                .defineList("SlideKnockBlacklist",
-                        List.of("minecraft:item"),
-                        entry -> entry instanceof String
-                );
-        CLIMB_BLOCK_WHITELIST = BUILDER
-                .comment("补充可以被攀爬的方块。")
-                .defineList("ClimbBlockWhitelist",
-                        List.of("minecraft:stone"),
-                        entry -> entry instanceof String
-                );
+
+        BUILDER.push("roll_attributes");
+        ROLL_DOUBLE_PRESS_DELAY = defineInt("RollDoublePressDelay", 250, 0, 2000, "疾跑键双击判定窗口，单位为毫秒。", "Maximum sprint-key double press interval in milliseconds.");
+        ROLL_AIR_TIMER = defineInt("RollAirTimer", 500, 0, 5000, "空中强化翻滚的跳跃窗口，单位为毫秒。", "Jump window in milliseconds for boosted air roll.");
+        ROLL_DURATION = defineInt("RollDuration", 14, 1, 200, "翻滚持续时间，单位为 tick，动作速度倍率会影响实际速度。", "Roll duration in ticks before action speed is applied.");
+        ROLL_SHIFT_START_TICK = defineInt("RollShiftStartTick", 3, 0, 200, "翻滚中开始强制潜行的 tick。", "Roll tick where forced sneaking starts.");
+        ROLL_SHIFT_END_TICK = defineInt("RollShiftEndTick", 10, 0, 200, "翻滚中结束强制潜行的 tick。", "Roll tick where forced sneaking ends.");
+        ROLL_COOLDOWN = defineInt("RollCooldown", 0, 0, 20 * 60, "翻滚冷却时间，单位为 tick。", "Roll cooldown in ticks.");
+        ROLL_ACTION_SPEED_MULTIPLIER = defineDouble("RollActionSpeedMultiplier", 1.2, 0.1, 10, "翻滚动作速度倍率。", "Roll animation speed multiplier.");
+        ROLL_SPEED_MULTIPLIER = defineDouble("RollSpeedMultiplier", 1.2, 0, 10, "翻滚移动速度倍率。", "Roll movement speed multiplier.");
+        ROLL_START_SPEED = defineDouble("RollStartSpeed", 0.225, 0, 5, "翻滚起步水平速度。", "Roll starting horizontal speed.");
+        ROLL_PEAK_SPEED = defineDouble("RollPeakSpeed", 0.35, 0, 5, "翻滚峰值水平速度。", "Roll peak horizontal speed.");
+        ROLL_END_SPEED = defineDouble("RollEndSpeed", 0.16, 0, 5, "翻滚结束水平速度。", "Roll ending horizontal speed.");
+        ROLL_AIR_VERTICAL_SPEED = defineDouble("RollAirVerticalSpeed", 0.19, -5, 5, "强化空中翻滚追加的竖直速度。", "Vertical speed added by boosted air roll.");
+        BUILDER.pop();
+
+        BUILDER.push("crawl_attributes");
+        CRAW_DOUBLE_PRESS_DELAY = defineInt("CrawDoublePressDelay", 250, 0, 2000, "潜行键双击判定窗口，单位为毫秒。", "Maximum sneak-key double press interval in milliseconds.");
+        LEAP_JUMP_TIMER = defineInt("LeapJumpTimer", 500, 0, 5000, "飞扑的跳跃窗口，单位为毫秒。", "Jump window in milliseconds for leap.");
+        LEAP_AUTO_CRAW_TICKS = defineInt("LeapAutoCrawTicks", 8, 0, 200, "飞扑后自动趴下持续时间，单位为 tick。", "Auto crawl duration after leap.");
+        LEAP_FORWARD_BOOST = defineDouble("LeapForwardBoost", 0.35, 0, 5, "飞扑追加的水平速度。", "Forward speed added by leap.");
+        LEAP_VERTICAL_BOOST = defineDouble("LeapVerticalBoost", 0.42, -5, 5, "飞扑追加的竖直速度。", "Vertical speed added by leap.");
+        CRAW_LEAP_FORWARD_BOOST = defineDouble("CrawLeapForwardBoost", 0.25, 0, 5, "跳跃窗口内潜行飞扑追加的水平速度。", "Forward speed added by sneak leap from jump window.");
+        CRAW_LEAP_VERTICAL_BOOST = defineDouble("CrawLeapVerticalBoost", 0.15, -5, 5, "跳跃窗口内潜行飞扑追加的竖直速度。", "Vertical speed added by sneak leap from jump window.");
+        BUILDER.pop();
+
+        BUILDER.push("slide_attributes");
+        SLIDE_START_BOOST = defineDouble("SlideStartBoost", 0.5, 0, 5, "滑铲开始时追加的水平速度。", "Horizontal boost applied when slide starts.");
+        SLIDE_AIR_FORWARD_BOOST = defineDouble("SlideAirForwardBoost", 0.1, 0, 5, "滑铲离地时追加的水平速度。", "Horizontal boost when slide leaves the ground.");
+        SLIDE_AIR_FALL_ACCELERATION = defineDouble("SlideAirFallAcceleration", -0.025, -5, 5, "滑铲滞空时每 tick 追加的竖直速度。", "Vertical acceleration applied while sliding in air.");
+        SLIDE_INITIAL_DAP_VERTICAL_BOOST = defineDouble("SlideInitialDapVerticalBoost", 0.5, -5, 5, "滑铲首次入水时追加的竖直速度。", "Initial vertical boost when sliding into water.");
+        SLIDE_DAP_VERTICAL_BOOST = defineDouble("SlideDapVerticalBoost", 0.7, -5, 5, "刷新打水漂时追加的竖直速度。", "Vertical boost for refreshed water dap.");
+        SLIDE_DAP_MOTION_DECAY = defineDouble("SlideDapMotionDecay", 0.92, 0, 2, "连续打水漂速度强度衰减倍率。", "Multiplier applied to repeated dap boost strength.");
+        SLIDE_KNOCK_DELAY = defineInt("SlideKnockDelay", 500, 0, 10000, "滑铲撞击检测间隔，单位为毫秒。", "Delay between slide knock checks in milliseconds.");
+        BUILDER.pop();
+
+        BUILDER.push("lists");
+        SLIDE_KNOCK_BLACKLIST = defineStringList("SlideKnockBlacklist", List.of("minecraft:item"), "不会被滑铲撞飞的实体 ID 列表。", "Entities ignored by slide knock.");
+        CLIMB_BLOCK_WHITELIST = defineStringList("ClimbBlockWhitelist", List.of("minecraft:stone"), "额外允许攀爬的方块 ID 列表。", "Extra blocks that can be climbed.");
+        BUILDER.pop();
+
         SPEC = BUILDER.build();
     }
 
-    public static void updateConfig(CompoundTag config) {
-        ConfigCache = config;
-    }
-
-    public static CompoundTag getAllConfig() {
-        CompoundTag config = new CompoundTag();
-        config.putBoolean("enableSlide", ENABLE_SLIDE.get());
-        config.putBoolean("enableDap", ENABLE_DAP.get());
-        config.putBoolean("enableSlideRepeat", ENABLE_SLIDE_REPEAT.get());
-        config.putBoolean("enableSlideKnock", ENABLE_SLIDE_KNOCK.get());
-        config.putBoolean("enableRoll", ENABLE_ROLL.get());
-        config.putBoolean("enableClimb", ENABLE_CLIMB.get());
-        config.putBoolean("enableClimbJump", ENABLE_CLIMB_JUMP.get());
-        config.putBoolean("enableFallingRescue", ENABLE_FALLING_RESCUE.get());
-        config.putBoolean("enableShallowSwimming", ENABLE_SHALLOW_SWIMMING.get());
-        config.putBoolean("enableSwimmingBoost", ENABLE_SWIMMING_BOOST.get());
-        config.putBoolean("enableFreestyle", ENABLE_FREESTYLE.get());
-        config.putBoolean("enableSwimmingPush", ENABLE_SWIMMING_PUSH.get());
-        config.putBoolean("enableCraw", ENABLE_CRAW.get());
-        config.putBoolean("enableCrawSlide", ENABLE_CRAW_SLIDE.get());
-        config.putBoolean("enableLeap", ENABLE_LEAP.get());
-        config.putBoolean("enableJumpCancelCraw", ENABLE_JUMP_CANCEL_CRAW.get());
-        config.putBoolean("enableAutoDodge", ENABLE_AUTO_DODGE.get());
-        config.putInt("SlideDuration", SLIDE_DURATION.get());
-        config.putInt("SlideAirDuration", SLIDE_AIR_DURATION.get());
-        config.putInt("DapTimes", DAP_TIMES.get());
-        config.putInt("SlideCooldown", SLIDE_COOLDOWN.get());
-        config.putInt("ClimbJumpCooldown", CLIMB_JUMP_COOLDOWN.get());
-        config.putInt("SwimmingBoostCooldown", SWIMMING_BOOST_COOLDOWN.get());
-        config.putInt("SwimmingBoostAirCost", SWIMMING_BOOST_AIR_COST.get());
-        return config;
-    }
-
-    @SubscribeEvent
-    public static void onConfigLoaded(FMLLoadCompleteEvent event) {
-        updateConfig(getAllConfig());
-    }
-
     public static boolean enable(String key) {
-        return ConfigCache.getBoolean("enable" + key);
+        ForgeConfigSpec.BooleanValue value = BOOLEAN_VALUES.get("enable" + key);
+        return value != null && value.get();
+    }
+
+    private static ForgeConfigSpec.BooleanValue defineBoolean(String key, boolean defaultValue, String... comment) {
+        ForgeConfigSpec.BooleanValue value = BUILDER.comment(comment).define(key, defaultValue);
+        BOOLEAN_VALUES.put(key, value);
+        return value;
+    }
+
+    private static ForgeConfigSpec.IntValue defineInt(String key, int defaultValue, int min, int max, String... comment) {
+        ForgeConfigSpec.IntValue value = BUILDER.comment(comment).defineInRange(key, defaultValue, min, max);
+        return value;
+    }
+
+    private static ForgeConfigSpec.DoubleValue defineDouble(String key, double defaultValue, double min, double max, String... comment) {
+        return BUILDER.comment(comment).defineInRange(key, defaultValue, min, max);
+    }
+
+    private static ForgeConfigSpec.ConfigValue<List<? extends String>> defineStringList(String key, List<String> defaultValue, String... comment) {
+        return BUILDER.comment(comment).defineList(key, defaultValue, entry -> entry instanceof String);
     }
 }

@@ -12,7 +12,6 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -21,16 +20,14 @@ import java.util.TimerTask;
 
 @Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
 public class SwimEvent {
-    private static int COOLDOWN;
-    private static int AIR_COST;
-    private static int cooldown = COOLDOWN;
+    private static int cooldown;
     @SubscribeEvent
     public static void swim(TickEvent.PlayerTickEvent event) {
         Player player = event.player;
 
         if (!player.isLocalPlayer() || player.isSpectator()) return;
         Options options = Minecraft.getInstance().options;
-        if (cooldown > 0 && cooldown <= COOLDOWN) {
+        if (cooldown > 0 && cooldown <= Config.SWIMMING_BOOST_COOLDOWN.get()) {
             cooldown--;
         }
 
@@ -58,13 +55,16 @@ public class SwimEvent {
         if (player == null || player.isSpectator()) return;
         if (event.getAction() == InputConstants.PRESS && event.getKey() == options.keySprint.getKey().getValue()) {
             if (canSwimmingBoost(player)) {
-                cooldown = COOLDOWN;
+                cooldown = Config.SWIMMING_BOOST_COOLDOWN.get();
                 Vec3 lookDirection = player.getLookAngle();
-                double boost = 0.4;
                 player.setDeltaMovement(
-                    player.getDeltaMovement().add(lookDirection.x * boost, lookDirection.y * boost, lookDirection.z * boost)
+                    player.getDeltaMovement().add(
+                            lookDirection.x * Config.SWIMMING_BOOST_STRENGTH.get(),
+                            lookDirection.y * Config.SWIMMING_BOOST_STRENGTH.get(),
+                            lookDirection.z * Config.SWIMMING_BOOST_STRENGTH.get()
+                    )
                 );
-                player.setAirSupply(player.getAirSupply() - AIR_COST);
+                player.setAirSupply(player.getAirSupply() - Config.SWIMMING_BOOST_AIR_COST.get());
                 // 播放水声
                 player.playSound(
                         SoundEvents.AMBIENT_UNDERWATER_ENTER,
@@ -95,12 +95,6 @@ public class SwimEvent {
             }
         }
     }
-    @SubscribeEvent
-    public static void onConfigLoad(PlayerEvent.PlayerLoggedInEvent event) {
-        COOLDOWN = Config.ConfigCache.getInt("SwimmingBoostCooldown");
-        AIR_COST = Config.ConfigCache.getInt("SwimmingBoostAirCost");
-    }
-
     public static boolean canSwimmingBoost(Player player) {
         return Config.enable("SwimmingBoost") && cooldown <= 0 && player.isSwimming();
     }

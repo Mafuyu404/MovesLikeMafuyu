@@ -16,14 +16,12 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
 public class ClimbEvent {
-    private static int COOLDOWN;
-    private static long cooldown = COOLDOWN;
+    private static long cooldown;
     public static boolean Falling = true;
     private static double CATCH_DISTANCE = 0.2;
     private static double FALLING_CATCH_DISTANCE = 0.6;
@@ -33,7 +31,7 @@ public class ClimbEvent {
         Player player = event.player;
         if (!player.isLocalPlayer() || player.isSpectator()) return;
         Options options = Minecraft.getInstance().options;
-        if (cooldown > 0 && cooldown <= COOLDOWN) {
+        if (cooldown > 0 && cooldown <= Config.CLIMB_JUMP_COOLDOWN.get()) {
             cooldown--;
         }
         if (canClimbJump(player)) KeyPrompts.show(options.keyJump.getKey().toString(), "smartkeyprompts.moveslikemafuyu.climbing_jump");
@@ -58,7 +56,7 @@ public class ClimbEvent {
         if (event.getKey() == options.keyJump.getKey().getValue()) {
             if (canClimbJump(player)) {
                 player.jumpFromGround();
-                cooldown = COOLDOWN;
+                cooldown = Config.CLIMB_JUMP_COOLDOWN.get();
             }
         }
     }
@@ -88,10 +86,5 @@ public class ClimbEvent {
         BlockState state = level.getBlockState(pos);
         VoxelShape collisionShape = state.getCollisionShape(level, pos);
         return !collisionShape.isEmpty();
-    }
-
-    @SubscribeEvent
-    public static void onConfigLoad(PlayerEvent.PlayerLoggedInEvent event) {
-        COOLDOWN = Config.ConfigCache.getInt("ClimbJumpCooldown");
     }
 }
