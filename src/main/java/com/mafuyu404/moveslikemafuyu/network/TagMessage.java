@@ -3,6 +3,7 @@ package com.mafuyu404.moveslikemafuyu.network;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Pose;
+import com.mafuyu404.moveslikemafuyu.util.PoseHelper;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
@@ -34,7 +35,7 @@ public class TagMessage {
                     player.addTag(msg.tag);
                 }
                 if (msg.tag.equals("craw")) {
-                    player.setForcedPose(Pose.SWIMMING);
+                    PoseHelper.forcePose(player, Pose.SWIMMING);
                 }
                 if (msg.tag.equals("roll_shift")) {
                     player.setShiftKeyDown(true);
@@ -43,7 +44,7 @@ public class TagMessage {
             else {
                 player.removeTag(msg.tag);
                 if (msg.tag.equals("craw")) {
-                    player.setForcedPose(null);
+                    PoseHelper.clearForcedPose(player);
                 }
                 if (msg.tag.equals("roll_shift")) {
                     player.setShiftKeyDown(false);

@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class LivingEntityMixin {
     @Inject(method = "onClimbable", at = @At("HEAD"), cancellable = true)
     private void onIsOnLadder(CallbackInfoReturnable<Boolean> cir) {
-        if (!Config.enable("Craw")) return;
+        if (!Config.enable("Climb")) return;
         if ((Object) this instanceof Player player) {
             if (!player.isLocalPlayer()) return;
             if (ClimbEvent.checkWallClimbCondition(player) && !player.isSpectator()) {

@@ -21,6 +21,7 @@ public class NetworkHandler {
         CHANNEL.registerMessage(packetId++, TagMessage.class, TagMessage::encode, TagMessage::decode, TagMessage::handle);
         CHANNEL.registerMessage(packetId++, KnockMessage.class, KnockMessage::encode, KnockMessage::decode, KnockMessage::handle);
         CHANNEL.registerMessage(packetId++, MoveAttributesMessage.class, MoveAttributesMessage::encode, MoveAttributesMessage::decode, MoveAttributesMessage::handle);
+        CHANNEL.registerMessage(packetId++, SwimmingBoostMessage.class, SwimmingBoostMessage::encode, SwimmingBoostMessage::decode, SwimmingBoostMessage::handle);
     }
 
 }

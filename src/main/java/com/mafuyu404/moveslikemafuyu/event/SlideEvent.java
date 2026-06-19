@@ -8,7 +8,7 @@ import com.mafuyu404.moveslikemafuyu.compat.KeyPrompts;
 import com.mafuyu404.moveslikemafuyu.network.KnockMessage;
 import com.mafuyu404.moveslikemafuyu.network.NetworkHandler;
 import com.mafuyu404.moveslikemafuyu.network.TagMessage;
-import com.mojang.blaze3d.platform.InputConstants;
+import com.mafuyu404.moveslikemafuyu.util.KeyInputHelper;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -56,8 +56,8 @@ public class SlideEvent {
             return;
         }
 
-        if (canSlide(player)) KeyPrompts.show("key.keyboard.left.shift", "smartkeyprompts.moveslikemafuyu.slide");
-        if (canRefreshDap(player)) KeyPrompts.show("key.keyboard.space", "smartkeyprompts.moveslikemafuyu.dap");
+        if (canSlide(player)) KeyPrompts.show(options.keyShift.getKey().toString(), "smartkeyprompts.moveslikemafuyu.slide");
+        if (canRefreshDap(player)) KeyPrompts.show(options.keyJump.getKey().toString(), "smartkeyprompts.moveslikemafuyu.dap");
 
         if (player.getTags().contains("slide")) {
             if (storedCameraType != null) options.setCameraType(storedCameraType);
@@ -120,29 +120,31 @@ public class SlideEvent {
         if (Minecraft.getInstance().screen != null) return;
         Player player = Minecraft.getInstance().player;
         Options options = Minecraft.getInstance().options;
-        if (player == null || player.isSpectator() || event.getAction() != InputConstants.PRESS) return;
-        if (event.getKey() == options.keyJump.getKey().getValue()) {
-            if (player.getTags().contains("slide")) {
-                if (canRefreshDap(player)) {
-                    dap_refreshed = true;
-                    dap_times++;
-                }
-                else cancel(player);
-            }
+        if (player == null || player.isSpectator()) return;
+        if (KeyInputHelper.isPress(event, options.keyJump)) {
+            handleJumpPress(player);
         }
-        if (event.getKey() == options.keyShift.getKey().getValue()) {
-            long currentTime = System.currentTimeMillis();
-            boolean doubleTapSlide = !Config.enable("SlideDoubleTapTrigger")
-                    || currentTime - lastShiftPressTime < MoveAttributeResolver.getInt(player, MoveAttribute.CRAW_DOUBLE_PRESS_DELAY);
-            if (canSlide(player) && doubleTapSlide) {
-                if (!player.getTags().contains("craw")) startSlide(player);
-            }
-            lastShiftPressTime = currentTime;
+        if (KeyInputHelper.isPress(event, options.keyShift)) {
+            handleShiftPress(player);
         }
-        if (event.getKey() == options.keyDown.getKey().getValue()) {
-            if (player.getTags().contains("slide")) {
-                cancel(player);
-            }
+        if (KeyInputHelper.isPress(event, options.keyDown)) {
+            handleDownPress(player);
+        }
+    }
+    @SubscribeEvent
+    public static void onMouseAction(InputEvent.MouseButton.Post event) {
+        if (Minecraft.getInstance().screen != null) return;
+        Player player = Minecraft.getInstance().player;
+        Options options = Minecraft.getInstance().options;
+        if (player == null || player.isSpectator()) return;
+        if (KeyInputHelper.isPress(event, options.keyJump)) {
+            handleJumpPress(player);
+        }
+        if (KeyInputHelper.isPress(event, options.keyShift)) {
+            handleShiftPress(player);
+        }
+        if (KeyInputHelper.isPress(event, options.keyDown)) {
+            handleDownPress(player);
         }
     }
     @SubscribeEvent
@@ -236,5 +238,30 @@ public class SlideEvent {
     }
     public static boolean canRefreshDap(Player player) {
         return player.getTags().contains("slide") && Config.enable("Dap") && canDap && !dap_refreshed;
+    }
+    private static void handleJumpPress(Player player) {
+        if (player.getTags().contains("slide")) {
+            if (canRefreshDap(player)) {
+                dap_refreshed = true;
+                dap_times++;
+            }
+            else cancel(player);
+        }
+    }
+
+    private static void handleShiftPress(Player player) {
+        long currentTime = System.currentTimeMillis();
+        boolean doubleTapSlide = !Config.enable("SlideDoubleTapTrigger")
+                || currentTime - lastShiftPressTime < MoveAttributeResolver.getInt(player, MoveAttribute.CRAW_DOUBLE_PRESS_DELAY);
+        if (canSlide(player) && doubleTapSlide) {
+            if (!player.getTags().contains("craw")) startSlide(player);
+        }
+        lastShiftPressTime = currentTime;
+    }
+
+    private static void handleDownPress(Player player) {
+        if (player.getTags().contains("slide")) {
+            cancel(player);
+        }
     }
 }

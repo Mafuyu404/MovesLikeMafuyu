@@ -5,6 +5,7 @@ import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
 import com.mafuyu404.moveslikemafuyu.capability.MoveAttribute;
 import com.mafuyu404.moveslikemafuyu.capability.MoveAttributeResolver;
 import com.mafuyu404.moveslikemafuyu.compat.TaczCompat;
+import com.mafuyu404.moveslikemafuyu.util.PoseHelper;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.TickEvent;
@@ -43,16 +44,16 @@ public class ServerEvent {
         }
 
         if (player.getTags().contains("craw")) {
-            player.setForcedPose(Pose.SWIMMING);
+            PoseHelper.forcePose(player, Pose.SWIMMING);
             TaczCompat.syncCrawling(player, true);
             return;
         }
         if (Config.enable("ShallowSwimming") && player.isInWater() && player.isSprinting()) {
-            player.setForcedPose(Pose.SWIMMING);
+            PoseHelper.forcePose(player, Pose.SWIMMING);
             return;
         }
         if (player.getForcedPose() == Pose.SWIMMING) {
-            player.setForcedPose(null);
+            PoseHelper.clearForcedPose(player);
             TaczCompat.syncCrawling(player, false);
         }
     }
@@ -65,7 +66,7 @@ public class ServerEvent {
         player.removeTag("roll");
         rollInvulnerablePlayers.remove(player.getUUID());
         if (player.invulnerableTime <= MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_DURATION)) player.invulnerableTime = 0;
-        player.setForcedPose(null);
+        PoseHelper.clearForcedPose(player);
         TaczCompat.syncCrawling(player, false);
     }
 }

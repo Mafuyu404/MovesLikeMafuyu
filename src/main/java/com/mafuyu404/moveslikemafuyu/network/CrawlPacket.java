@@ -1,6 +1,7 @@
 package com.mafuyu404.moveslikemafuyu.network;
 
 import com.mafuyu404.moveslikemafuyu.compat.TaczCompat;
+import com.mafuyu404.moveslikemafuyu.util.PoseHelper;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Pose;
@@ -29,11 +30,11 @@ public class CrawlPacket {
             if (player == null) return;
             if (msg.start) {
                 player.addTag("craw");
-                player.setForcedPose(Pose.SWIMMING);
+                PoseHelper.forcePose(player, Pose.SWIMMING);
                 TaczCompat.syncCrawling(player, true);
             } else {
                 player.removeTag("craw");
-                player.setForcedPose(null);
+                PoseHelper.clearForcedPose(player);
                 TaczCompat.syncCrawling(player, false);
             }
         });

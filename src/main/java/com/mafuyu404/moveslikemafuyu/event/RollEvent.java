@@ -7,7 +7,7 @@ import com.mafuyu404.moveslikemafuyu.capability.MoveAttributeResolver;
 import com.mafuyu404.moveslikemafuyu.compat.KeyPrompts;
 import com.mafuyu404.moveslikemafuyu.network.NetworkHandler;
 import com.mafuyu404.moveslikemafuyu.network.TagMessage;
-import com.mojang.blaze3d.platform.InputConstants;
+import com.mafuyu404.moveslikemafuyu.util.KeyInputHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.sounds.SoundEvents;
@@ -74,30 +74,29 @@ public class RollEvent {
         if (Minecraft.getInstance().screen != null) return;
         Player player = Minecraft.getInstance().player;
         Options options = Minecraft.getInstance().options;
-        if (player == null || player.isSpectator() || event.getAction() != InputConstants.PRESS) return;
+        if (player == null || player.isSpectator()) return;
 
-        if (event.getKey() == options.keySprint.getKey().getValue()) {
-            long currentTime = System.currentTimeMillis();
-            boolean sprintRollPressed = canRoll(player)
-                    && hasMovementInput(options)
-                    && player.isSprinting()
-                    && (!Config.enable("SprintRollDoubleTapTrigger")
-                    || currentTime - lastSprintPressTime < MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_DOUBLE_PRESS_DELAY));
-            if (sprintRollPressed) {
-                startRoll(player);
-                lastSprintPressTime = 0;
-            } else if (canRoll(player) && hasMovementInput(options) && currentTime - lastSprintPressTime < MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_DOUBLE_PRESS_DELAY)) {
-                startRoll(player);
-                lastSprintPressTime = 0;
-            } else {
-                lastSprintPressTime = currentTime;
-            }
+        if (KeyInputHelper.isPress(event, options.keySprint)) {
+            handleSprintPress(player, options);
         }
 
-        if (event.getKey() == options.keyJump.getKey().getValue()) {
-            if (player.onGround() && player.isSprinting()) {
-                lastJumpPressTime = System.currentTimeMillis();
-            }
+        if (KeyInputHelper.isPress(event, options.keyJump)) {
+            handleJumpPress(player);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onMouseAction(InputEvent.MouseButton.Post event) {
+        if (Minecraft.getInstance().screen != null) return;
+        Player player = Minecraft.getInstance().player;
+        Options options = Minecraft.getInstance().options;
+        if (player == null || player.isSpectator()) return;
+
+        if (KeyInputHelper.isPress(event, options.keySprint)) {
+            handleSprintPress(player, options);
+        }
+        if (KeyInputHelper.isPress(event, options.keyJump)) {
+            handleJumpPress(player);
         }
     }
 
@@ -227,5 +226,29 @@ public class RollEvent {
         Minecraft.getInstance().options.keyShift.setDown(shift);
         player.setShiftKeyDown(shift);
         NetworkHandler.CHANNEL.sendToServer(new TagMessage("roll_shift", shift));
+    }
+
+    private static void handleSprintPress(Player player, Options options) {
+        long currentTime = System.currentTimeMillis();
+        boolean sprintRollPressed = canRoll(player)
+                && hasMovementInput(options)
+                && player.isSprinting()
+                && (!Config.enable("SprintRollDoubleTapTrigger")
+                || currentTime - lastSprintPressTime < MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_DOUBLE_PRESS_DELAY));
+        if (sprintRollPressed) {
+            startRoll(player);
+            lastSprintPressTime = 0;
+        } else if (canRoll(player) && hasMovementInput(options) && currentTime - lastSprintPressTime < MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_DOUBLE_PRESS_DELAY)) {
+            startRoll(player);
+            lastSprintPressTime = 0;
+        } else {
+            lastSprintPressTime = currentTime;
+        }
+    }
+
+    private static void handleJumpPress(Player player) {
+        if (player.onGround() && player.isSprinting()) {
+            lastJumpPressTime = System.currentTimeMillis();
+        }
     }
 }

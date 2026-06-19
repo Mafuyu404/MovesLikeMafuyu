@@ -8,7 +8,8 @@ import com.mafuyu404.moveslikemafuyu.compat.KeyPrompts;
 import com.mafuyu404.moveslikemafuyu.compat.TaczCompat;
 import com.mafuyu404.moveslikemafuyu.network.CrawlPacket;
 import com.mafuyu404.moveslikemafuyu.network.NetworkHandler;
-import com.mojang.blaze3d.platform.InputConstants;
+import com.mafuyu404.moveslikemafuyu.util.KeyInputHelper;
+import com.mafuyu404.moveslikemafuyu.util.PoseHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.world.entity.Pose;
@@ -40,7 +41,7 @@ public class CrawEvent {
         if (Config.enable("Craw") && player.getTags().contains("craw")
                 && !player.isSpectator() && !player.getTags().contains("slide")) {
             options.keyShift.setDown(false);
-            player.setForcedPose(Pose.SWIMMING);
+            PoseHelper.forcePose(player, Pose.SWIMMING);
         }
         if (player.getTags().contains("auto_craw")) {
             if (AutoDodgeEvent.canStandSafely(player)) {
@@ -60,41 +61,34 @@ public class CrawEvent {
         Options options = Minecraft.getInstance().options;
         if (player == null || player.isSpectator()) return;
 
-        if (event.getKey() == options.keyShift.getKey().getValue() && event.getAction() == InputConstants.PRESS) {
-            long currentTime = System.currentTimeMillis();
-            if (player.getTags().contains("craw")) {
-                cancelCraw(player);
-            } else if (Config.enable("Craw") && currentTime - lastShiftPressTime < MoveAttributeResolver.getInt(player, MoveAttribute.CRAW_DOUBLE_PRESS_DELAY) && player.onGround()) {
-                startCraw(player);
-            } else if (canLeap(player)) {
-                Vec3 lookDirection = player.getLookAngle();
-                player.setDeltaMovement(
-                    player.getDeltaMovement().add(
-                            lookDirection.x * MoveAttributeResolver.getDouble(player, MoveAttribute.CRAW_LEAP_FORWARD_BOOST),
-                            MoveAttributeResolver.getDouble(player, MoveAttribute.CRAW_LEAP_VERTICAL_BOOST),
-                            lookDirection.z * MoveAttributeResolver.getDouble(player, MoveAttribute.CRAW_LEAP_FORWARD_BOOST)
-                    )
-                );
-                startCraw(player);
-                lastJumpPressTime *= 10;
-            }
-            lastShiftPressTime = currentTime;
+        if (KeyInputHelper.isPress(event, options.keyShift)) {
+            handleShiftPress(player);
         }
 
-        if (event.getKey() == options.keyJump.getKey().getValue() && event.getAction() == InputConstants.PRESS) {
-            if (player.onGround()) {
-                lastJumpPressTime = System.currentTimeMillis();
-            }
-            if (Config.enable("JumpCancelCraw") && player.getTags().contains("craw")) {
-                cancelCraw(player);
-                options.keyJump.setDown(false);
-            }
+        if (KeyInputHelper.isPress(event, options.keyJump)) {
+            handleJumpPress(player, options);
         }
 
-        if (event.getKey() == options.keySprint.getKey().getValue() && event.getAction() == InputConstants.PRESS) {
-            if (canCrawSlide(player)) {
-                SlideEvent.startSlide(player);
-            }
+        if (KeyInputHelper.isPress(event, options.keySprint)) {
+            handleSprintPress(player);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onMouseAction(InputEvent.MouseButton.Post event) {
+        if (Minecraft.getInstance().screen != null) return;
+        Player player = Minecraft.getInstance().player;
+        Options options = Minecraft.getInstance().options;
+        if (player == null || player.isSpectator()) return;
+
+        if (KeyInputHelper.isPress(event, options.keyShift)) {
+            handleShiftPress(player);
+        }
+        if (KeyInputHelper.isPress(event, options.keyJump)) {
+            handleJumpPress(player, options);
+        }
+        if (KeyInputHelper.isPress(event, options.keySprint)) {
+            handleSprintPress(player);
         }
     }
 
@@ -102,7 +96,7 @@ public class CrawEvent {
         if (player.isSpectator()) return;
         player.addTag("craw");
         player.setSprinting(false);
-        player.setForcedPose(Pose.SWIMMING);
+        PoseHelper.forcePose(player, Pose.SWIMMING);
         TaczCompat.syncCrawling(player, true);
         NetworkHandler.CHANNEL.sendToServer(new CrawlPacket(true));
     }
@@ -137,7 +131,7 @@ public class CrawEvent {
         player.removeTag("craw");
         player.removeTag("auto_craw");
         autoCrawReleaseTicks = 0;
-        player.setForcedPose(null);
+        PoseHelper.clearForcedPose(player);
         TaczCompat.syncCrawling(player, false);
         NetworkHandler.CHANNEL.sendToServer(new CrawlPacket(false));
     }
@@ -162,5 +156,42 @@ public class CrawEvent {
                 && player.onGround()
                 && SlideEvent.cooldown <= 0
                 && !player.getTags().contains("slide");
+    }
+
+    private static void handleShiftPress(Player player) {
+        long currentTime = System.currentTimeMillis();
+        if (player.getTags().contains("craw")) {
+            cancelCraw(player);
+        } else if (Config.enable("Craw") && currentTime - lastShiftPressTime < MoveAttributeResolver.getInt(player, MoveAttribute.CRAW_DOUBLE_PRESS_DELAY) && player.onGround()) {
+            startCraw(player);
+        } else if (canLeap(player)) {
+            Vec3 lookDirection = player.getLookAngle();
+            player.setDeltaMovement(
+                    player.getDeltaMovement().add(
+                            lookDirection.x * MoveAttributeResolver.getDouble(player, MoveAttribute.CRAW_LEAP_FORWARD_BOOST),
+                            MoveAttributeResolver.getDouble(player, MoveAttribute.CRAW_LEAP_VERTICAL_BOOST),
+                            lookDirection.z * MoveAttributeResolver.getDouble(player, MoveAttribute.CRAW_LEAP_FORWARD_BOOST)
+                    )
+            );
+            startCraw(player);
+            lastJumpPressTime *= 10;
+        }
+        lastShiftPressTime = currentTime;
+    }
+
+    private static void handleJumpPress(Player player, Options options) {
+        if (player.onGround()) {
+            lastJumpPressTime = System.currentTimeMillis();
+        }
+        if (Config.enable("JumpCancelCraw") && player.getTags().contains("craw")) {
+            cancelCraw(player);
+            options.keyJump.setDown(false);
+        }
+    }
+
+    private static void handleSprintPress(Player player) {
+        if (canCrawSlide(player)) {
+            SlideEvent.startSlide(player);
+        }
     }
 }
