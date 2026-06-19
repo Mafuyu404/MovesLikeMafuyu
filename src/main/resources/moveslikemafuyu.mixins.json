@@ -1,0 +1,20 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.mafuyu404.moveslikemafuyu.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "refmap": "moveslikemafuyu.refmap.json",
+  "mixins": [
+    "FireworkMixin",
+    "ShiftMixin",
+    "LivingEntityMixin"
+  ],
+  "client": [
+    "RollGameRendererMixin",
+    "RollLivingEntityRendererMixin",
+    "SlidePlayerRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
