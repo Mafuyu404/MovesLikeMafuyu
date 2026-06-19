@@ -2,6 +2,8 @@ package com.mafuyu404.moveslikemafuyu.event;
 
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
+import com.mafuyu404.moveslikemafuyu.capability.MoveAttribute;
+import com.mafuyu404.moveslikemafuyu.capability.MoveAttributeResolver;
 import com.mafuyu404.moveslikemafuyu.compat.KeyPrompts;
 import com.mafuyu404.moveslikemafuyu.compat.TaczCompat;
 import com.mafuyu404.moveslikemafuyu.network.CrawlPacket;
@@ -62,15 +64,15 @@ public class CrawEvent {
             long currentTime = System.currentTimeMillis();
             if (player.getTags().contains("craw")) {
                 cancelCraw(player);
-            } else if (Config.enable("Craw") && currentTime - lastShiftPressTime < Config.CRAW_DOUBLE_PRESS_DELAY.get() && player.onGround()) {
+            } else if (Config.enable("Craw") && currentTime - lastShiftPressTime < MoveAttributeResolver.getInt(player, MoveAttribute.CRAW_DOUBLE_PRESS_DELAY) && player.onGround()) {
                 startCraw(player);
             } else if (canLeap(player)) {
                 Vec3 lookDirection = player.getLookAngle();
                 player.setDeltaMovement(
                     player.getDeltaMovement().add(
-                            lookDirection.x * Config.CRAW_LEAP_FORWARD_BOOST.get(),
-                            Config.CRAW_LEAP_VERTICAL_BOOST.get(),
-                            lookDirection.z * Config.CRAW_LEAP_FORWARD_BOOST.get()
+                            lookDirection.x * MoveAttributeResolver.getDouble(player, MoveAttribute.CRAW_LEAP_FORWARD_BOOST),
+                            MoveAttributeResolver.getDouble(player, MoveAttribute.CRAW_LEAP_VERTICAL_BOOST),
+                            lookDirection.z * MoveAttributeResolver.getDouble(player, MoveAttribute.CRAW_LEAP_FORWARD_BOOST)
                     )
                 );
                 startCraw(player);
@@ -121,12 +123,12 @@ public class CrawEvent {
         horizontal = horizontal.normalize();
         player.setSprinting(true);
         player.setDeltaMovement(player.getDeltaMovement().add(
-                horizontal.x * Config.LEAP_FORWARD_BOOST.get(),
-                Config.LEAP_VERTICAL_BOOST.get(),
-                horizontal.z * Config.LEAP_FORWARD_BOOST.get()
+                horizontal.x * MoveAttributeResolver.getDouble(player, MoveAttribute.LEAP_FORWARD_BOOST),
+                MoveAttributeResolver.getDouble(player, MoveAttribute.LEAP_VERTICAL_BOOST),
+                horizontal.z * MoveAttributeResolver.getDouble(player, MoveAttribute.LEAP_FORWARD_BOOST)
         ));
         player.addTag("auto_craw");
-        autoCrawReleaseTicks = Config.LEAP_AUTO_CRAW_TICKS.get();
+        autoCrawReleaseTicks = MoveAttributeResolver.getInt(player, MoveAttribute.LEAP_AUTO_CRAW_TICKS);
         startCraw(player);
         lastJumpPressTime = 0;
     }
@@ -148,7 +150,7 @@ public class CrawEvent {
         return Config.enable("Leap")
                 && !player.getTags().contains("craw")
                 && player.isSprinting()
-                && System.currentTimeMillis() - lastJumpPressTime < Config.LEAP_JUMP_TIMER.get()
+                && System.currentTimeMillis() - lastJumpPressTime < MoveAttributeResolver.getInt(player, MoveAttribute.LEAP_JUMP_TIMER)
                 && player.getDeltaMovement().y > 0
                 && !player.onGround()
                 && !player.isInWater();

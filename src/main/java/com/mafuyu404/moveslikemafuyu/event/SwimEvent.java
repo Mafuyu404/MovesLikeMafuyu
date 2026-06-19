@@ -2,6 +2,8 @@ package com.mafuyu404.moveslikemafuyu.event;
 
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
+import com.mafuyu404.moveslikemafuyu.capability.MoveAttribute;
+import com.mafuyu404.moveslikemafuyu.capability.MoveAttributeResolver;
 import com.mafuyu404.moveslikemafuyu.compat.KeyPrompts;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
@@ -27,7 +29,7 @@ public class SwimEvent {
 
         if (!player.isLocalPlayer() || player.isSpectator()) return;
         Options options = Minecraft.getInstance().options;
-        if (cooldown > 0 && cooldown <= Config.SWIMMING_BOOST_COOLDOWN.get()) {
+        if (cooldown > 0 && cooldown <= MoveAttributeResolver.getInt(player, MoveAttribute.SWIMMING_BOOST_COOLDOWN)) {
             cooldown--;
         }
 
@@ -55,16 +57,16 @@ public class SwimEvent {
         if (player == null || player.isSpectator()) return;
         if (event.getAction() == InputConstants.PRESS && event.getKey() == options.keySprint.getKey().getValue()) {
             if (canSwimmingBoost(player)) {
-                cooldown = Config.SWIMMING_BOOST_COOLDOWN.get();
+                cooldown = MoveAttributeResolver.getInt(player, MoveAttribute.SWIMMING_BOOST_COOLDOWN);
                 Vec3 lookDirection = player.getLookAngle();
                 player.setDeltaMovement(
                     player.getDeltaMovement().add(
-                            lookDirection.x * Config.SWIMMING_BOOST_STRENGTH.get(),
-                            lookDirection.y * Config.SWIMMING_BOOST_STRENGTH.get(),
-                            lookDirection.z * Config.SWIMMING_BOOST_STRENGTH.get()
+                            lookDirection.x * MoveAttributeResolver.getDouble(player, MoveAttribute.SWIMMING_BOOST_STRENGTH),
+                            lookDirection.y * MoveAttributeResolver.getDouble(player, MoveAttribute.SWIMMING_BOOST_STRENGTH),
+                            lookDirection.z * MoveAttributeResolver.getDouble(player, MoveAttribute.SWIMMING_BOOST_STRENGTH)
                     )
                 );
-                player.setAirSupply(player.getAirSupply() - Config.SWIMMING_BOOST_AIR_COST.get());
+                player.setAirSupply(player.getAirSupply() - MoveAttributeResolver.getInt(player, MoveAttribute.SWIMMING_BOOST_AIR_COST));
                 // 播放水声
                 player.playSound(
                         SoundEvents.AMBIENT_UNDERWATER_ENTER,

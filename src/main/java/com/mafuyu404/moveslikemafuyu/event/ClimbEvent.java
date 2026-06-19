@@ -2,6 +2,8 @@ package com.mafuyu404.moveslikemafuyu.event;
 
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
+import com.mafuyu404.moveslikemafuyu.capability.MoveAttribute;
+import com.mafuyu404.moveslikemafuyu.capability.MoveAttributeResolver;
 import com.mafuyu404.moveslikemafuyu.compat.KeyPrompts;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -31,7 +33,7 @@ public class ClimbEvent {
         Player player = event.player;
         if (!player.isLocalPlayer() || player.isSpectator()) return;
         Options options = Minecraft.getInstance().options;
-        if (cooldown > 0 && cooldown <= Config.CLIMB_JUMP_COOLDOWN.get()) {
+        if (cooldown > 0 && cooldown <= MoveAttributeResolver.getInt(player, MoveAttribute.CLIMB_JUMP_COOLDOWN)) {
             cooldown--;
         }
         if (canClimbJump(player)) KeyPrompts.show(options.keyJump.getKey().toString(), "smartkeyprompts.moveslikemafuyu.climbing_jump");
@@ -56,7 +58,7 @@ public class ClimbEvent {
         if (event.getKey() == options.keyJump.getKey().getValue()) {
             if (canClimbJump(player)) {
                 player.jumpFromGround();
-                cooldown = Config.CLIMB_JUMP_COOLDOWN.get();
+                cooldown = MoveAttributeResolver.getInt(player, MoveAttribute.CLIMB_JUMP_COOLDOWN);
             }
         }
     }

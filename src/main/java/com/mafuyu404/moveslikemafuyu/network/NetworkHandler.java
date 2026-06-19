@@ -20,7 +20,7 @@ public class NetworkHandler {
         CHANNEL.registerMessage(packetId++, CrawlPacket.class, CrawlPacket::encode, CrawlPacket::decode, CrawlPacket::handle);
         CHANNEL.registerMessage(packetId++, TagMessage.class, TagMessage::encode, TagMessage::decode, TagMessage::handle);
         CHANNEL.registerMessage(packetId++, KnockMessage.class, KnockMessage::encode, KnockMessage::decode, KnockMessage::handle);
+        CHANNEL.registerMessage(packetId++, MoveAttributesMessage.class, MoveAttributesMessage::encode, MoveAttributesMessage::decode, MoveAttributesMessage::handle);
     }
 
-    // 发送数据包到客户端
 }

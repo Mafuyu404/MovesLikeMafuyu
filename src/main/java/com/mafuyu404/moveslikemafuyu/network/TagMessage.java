@@ -1,10 +1,8 @@
 package com.mafuyu404.moveslikemafuyu.network;
 
-import com.mafuyu404.moveslikemafuyu.event.SlideEvent;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;

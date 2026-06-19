@@ -2,6 +2,8 @@ package com.mafuyu404.moveslikemafuyu.event;
 
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
+import com.mafuyu404.moveslikemafuyu.capability.MoveAttribute;
+import com.mafuyu404.moveslikemafuyu.capability.MoveAttributeResolver;
 import com.mafuyu404.moveslikemafuyu.compat.TaczCompat;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
@@ -22,7 +24,7 @@ public class ServerEvent {
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         Player player = event.getEntity();
         if (player.isLocalPlayer()) return;
-        // 将服务端配置同步给客户端
+        // 清理可能残留在实体上的动作状态
         player.removeTag("slide");
         player.removeTag("craw");
         player.removeTag("roll");
@@ -35,8 +37,8 @@ public class ServerEvent {
 
         if (player.getTags().contains("roll") && Config.enable("RollInvulnerability")) {
             rollInvulnerablePlayers.add(player.getUUID());
-            player.invulnerableTime = Math.max(player.invulnerableTime, Config.ROLL_DURATION.get());
-        } else if (rollInvulnerablePlayers.remove(player.getUUID()) && player.invulnerableTime <= Config.ROLL_DURATION.get()) {
+            player.invulnerableTime = Math.max(player.invulnerableTime, MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_DURATION));
+        } else if (rollInvulnerablePlayers.remove(player.getUUID()) && player.invulnerableTime <= MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_DURATION)) {
             player.invulnerableTime = 0;
         }
 
@@ -62,7 +64,7 @@ public class ServerEvent {
         player.removeTag("craw");
         player.removeTag("roll");
         rollInvulnerablePlayers.remove(player.getUUID());
-        if (player.invulnerableTime <= Config.ROLL_DURATION.get()) player.invulnerableTime = 0;
+        if (player.invulnerableTime <= MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_DURATION)) player.invulnerableTime = 0;
         player.setForcedPose(null);
         TaczCompat.syncCrawling(player, false);
     }

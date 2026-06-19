@@ -2,6 +2,8 @@ package com.mafuyu404.moveslikemafuyu.event;
 
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
+import com.mafuyu404.moveslikemafuyu.capability.MoveAttribute;
+import com.mafuyu404.moveslikemafuyu.capability.MoveAttributeResolver;
 import com.mafuyu404.moveslikemafuyu.compat.KeyPrompts;
 import com.mafuyu404.moveslikemafuyu.network.NetworkHandler;
 import com.mafuyu404.moveslikemafuyu.network.TagMessage;
@@ -37,7 +39,7 @@ public class RollEvent {
         if (!player.isLocalPlayer() || player.isSpectator()) return;
 
         Options options = Minecraft.getInstance().options;
-        if (canRoll(player) && hasMovementInput(options)) {
+        if (canPromptRoll(player, options)) {
             KeyPrompts.show(options.keySprint.getKey().toString(), "smartkeyprompts.moveslikemafuyu.roll");
         }
 
@@ -47,15 +49,16 @@ public class RollEvent {
                 cancelRoll(player);
                 return;
             }
-            timer += Config.ROLL_ACTION_SPEED_MULTIPLIER.get();
-            progress = (float) Math.min(1.0, timer / Config.ROLL_DURATION.get());
+            timer += MoveAttributeResolver.getDouble(player, MoveAttribute.ROLL_ACTION_SPEED_MULTIPLIER);
+            progress = (float) Math.min(1.0, timer / MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_DURATION));
             if (!rollMovementEnabled && player.onGround()) {
                 rollMovementEnabled = true;
             }
             if (rollMovementEnabled) applyRollMovement(player, progress);
-            setRollShift(player, timer >= Config.ROLL_SHIFT_START_TICK.get() && timer <= Config.ROLL_SHIFT_END_TICK.get());
+            setRollShift(player, timer >= MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_SHIFT_START_TICK)
+                    && timer <= MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_SHIFT_END_TICK));
             player.setSprinting(true);
-            if (timer > Config.ROLL_DURATION.get() || player.isInWater() || player.isFallFlying()) {
+            if (timer > MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_DURATION) || player.isInWater() || player.isFallFlying()) {
                 cancelRoll(player);
             }
         } else {
@@ -79,11 +82,11 @@ public class RollEvent {
                     && hasMovementInput(options)
                     && player.isSprinting()
                     && (!Config.enable("SprintRollDoubleTapTrigger")
-                    || currentTime - lastSprintPressTime < Config.ROLL_DOUBLE_PRESS_DELAY.get());
+                    || currentTime - lastSprintPressTime < MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_DOUBLE_PRESS_DELAY));
             if (sprintRollPressed) {
                 startRoll(player);
                 lastSprintPressTime = 0;
-            } else if (canRoll(player) && hasMovementInput(options) && currentTime - lastSprintPressTime < Config.ROLL_DOUBLE_PRESS_DELAY.get()) {
+            } else if (canRoll(player) && hasMovementInput(options) && currentTime - lastSprintPressTime < MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_DOUBLE_PRESS_DELAY)) {
                 startRoll(player);
                 lastSprintPressTime = 0;
             } else {
@@ -92,7 +95,7 @@ public class RollEvent {
         }
 
         if (event.getKey() == options.keyJump.getKey().getValue()) {
-            if (player.onGround()) {
+            if (player.onGround() && player.isSprinting()) {
                 lastJumpPressTime = System.currentTimeMillis();
             }
         }
@@ -113,7 +116,7 @@ public class RollEvent {
         NetworkHandler.CHANNEL.sendToServer(new TagMessage("roll", true));
 
         if (!player.onGround() && rollMovementEnabled) {
-            player.setDeltaMovement(player.getDeltaMovement().add(0, Config.ROLL_AIR_VERTICAL_SPEED.get(), 0));
+            player.setDeltaMovement(player.getDeltaMovement().add(0, MoveAttributeResolver.getDouble(player, MoveAttribute.ROLL_AIR_VERTICAL_SPEED), 0));
         }
         if (rollMovementEnabled) applyRollMovement(player, 0.0f);
         player.playSound(SoundEvents.ARMOR_EQUIP_LEATHER, 0.6f, 1.2f);
@@ -124,7 +127,7 @@ public class RollEvent {
         player.removeTag("roll");
         setRollShift(player, false);
         NetworkHandler.CHANNEL.sendToServer(new TagMessage("roll", false));
-        cooldown = Config.ROLL_COOLDOWN.get();
+        cooldown = MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_COOLDOWN);
         previousProgress = 0;
         progress = 0;
         rollMovementEnabled = false;
@@ -156,10 +159,14 @@ public class RollEvent {
                 && !player.getTags().contains("craw");
     }
 
+    private static boolean canPromptRoll(Player player, Options options) {
+        return canRoll(player) && hasMovementInput(options);
+    }
+
     private static boolean canAirRoll(Player player, long currentTime) {
         return !player.onGround()
                 && player.getDeltaMovement().y > 0
-                && currentTime - lastJumpPressTime < Config.ROLL_AIR_TIMER.get();
+                && currentTime - lastJumpPressTime < MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_AIR_TIMER);
     }
 
     private static Vec3 horizontalDirection(Player player) {
@@ -194,18 +201,20 @@ public class RollEvent {
     private static void applyRollMovement(Player player, float progress) {
         if (rollDirection.lengthSqr() < 1.0E-6) rollDirection = horizontalDirection(player);
         Vec3 movement = player.getDeltaMovement();
-        double speed = getRollSpeed(progress) * Config.ROLL_SPEED_MULTIPLIER.get();
+        double speed = getRollSpeed(player, progress) * MoveAttributeResolver.getDouble(player, MoveAttribute.ROLL_SPEED_MULTIPLIER);
         player.setDeltaMovement(rollDirection.x * speed, movement.y, rollDirection.z * speed);
     }
 
-    private static double getRollSpeed(float progress) {
+    private static double getRollSpeed(Player player, float progress) {
         if (progress < 0.25f) {
-            return lerp(Config.ROLL_START_SPEED.get(), Config.ROLL_PEAK_SPEED.get(), progress / 0.25f);
+            return lerp(MoveAttributeResolver.getDouble(player, MoveAttribute.ROLL_START_SPEED),
+                    MoveAttributeResolver.getDouble(player, MoveAttribute.ROLL_PEAK_SPEED), progress / 0.25f);
         }
         if (progress > 0.75f) {
-            return lerp(Config.ROLL_PEAK_SPEED.get(), Config.ROLL_END_SPEED.get(), (progress - 0.75f) / 0.25f);
+            return lerp(MoveAttributeResolver.getDouble(player, MoveAttribute.ROLL_PEAK_SPEED),
+                    MoveAttributeResolver.getDouble(player, MoveAttribute.ROLL_END_SPEED), (progress - 0.75f) / 0.25f);
         }
-        return Config.ROLL_PEAK_SPEED.get();
+        return MoveAttributeResolver.getDouble(player, MoveAttribute.ROLL_PEAK_SPEED);
     }
 
     private static double lerp(double start, double end, double delta) {

@@ -99,11 +99,21 @@ public class Config {
         ENABLE_FALLING_RESCUE = defineBoolean("enableFallingRescue", true, "是否启用失足抢救。", "Enable falling rescue on climbable surfaces.");
         BUILDER.pop();
 
+        BUILDER.push("climb_attributes");
+        CLIMB_JUMP_COOLDOWN = defineInt("ClimbJumpCooldown", 60, 0, 20 * 60, "攀爬跳冷却时间，单位为 tick。", "Climb jump cooldown in ticks.");
+        BUILDER.pop();
+
         BUILDER.push("swimming");
         ENABLE_SHALLOW_SWIMMING = defineBoolean("enableShallowSwimming", true, "是否启用浅水游泳。", "Enable sprint swimming in shallow water.");
         ENABLE_SWIMMING_BOOST = defineBoolean("enableSwimmingBoost", true, "是否启用水中推进。", "Enable sprint boost while swimming.");
         ENABLE_FREESTYLE = defineBoolean("enableFreestyle", true, "是否启用水面自由泳。", "Enable freestyle surface swimming.");
         ENABLE_SWIMMING_PUSH = defineBoolean("enableSwimmingPush", true, "是否允许从自由泳跳出并进入滑铲。", "Enable jumping from freestyle swimming into slide.");
+        BUILDER.pop();
+
+        BUILDER.push("swimming_attributes");
+        SWIMMING_BOOST_COOLDOWN = defineInt("SwimmingBoostCooldown", 60, 0, 20 * 60, "水中推进冷却时间，单位为 tick。", "Swimming boost cooldown in ticks.");
+        SWIMMING_BOOST_AIR_COST = defineInt("SwimmingBoostAirCost", 30, 0, 300, "水中推进消耗的氧气值。", "Air supply consumed by swimming boost.");
+        SWIMMING_BOOST_STRENGTH = defineDouble("SwimmingBoostStrength", 0.4, 0, 5, "水中推进强度。", "Swimming boost movement strength.");
         BUILDER.pop();
 
         BUILDER.push("crawling");
@@ -115,17 +125,6 @@ public class Config {
 
         BUILDER.push("auto_dodge");
         ENABLE_AUTO_DODGE = defineBoolean("enableAutoDodge", true, "是否启用自动闪避。", "Automatically dodge incoming projectiles.");
-        BUILDER.pop();
-
-        BUILDER.push("attributes");
-        SLIDE_DURATION = defineInt("SlideDuration", 25, 0, 20 * 60, "滑铲持续时间，单位为 tick。", "Slide duration in ticks.");
-        SLIDE_AIR_DURATION = defineInt("SlideAirDuration", 30, 0, 20 * 60, "滑铲最大滞空时间，单位为 tick。", "Maximum slide air duration in ticks.");
-        DAP_TIMES = defineInt("DapTimes", 2, 0, 64, "打水漂次数上限。", "Maximum water dap count.");
-        SLIDE_COOLDOWN = defineInt("SlideCooldown", 60, 0, 20 * 60, "滑铲冷却时间，单位为 tick。", "Slide cooldown in ticks.");
-        CLIMB_JUMP_COOLDOWN = defineInt("ClimbJumpCooldown", 60, 0, 20 * 60, "攀爬跳冷却时间，单位为 tick。", "Climb jump cooldown in ticks.");
-        SWIMMING_BOOST_COOLDOWN = defineInt("SwimmingBoostCooldown", 60, 0, 20 * 60, "水中推进冷却时间，单位为 tick。", "Swimming boost cooldown in ticks.");
-        SWIMMING_BOOST_AIR_COST = defineInt("SwimmingBoostAirCost", 30, 0, 300, "水中推进消耗的氧气值。", "Air supply consumed by swimming boost.");
-        SWIMMING_BOOST_STRENGTH = defineDouble("SwimmingBoostStrength", 0.4, 0, 5, "水中推进强度。", "Swimming boost movement strength.");
         BUILDER.pop();
 
         BUILDER.push("roll_attributes");
@@ -154,6 +153,10 @@ public class Config {
         BUILDER.pop();
 
         BUILDER.push("slide_attributes");
+        SLIDE_DURATION = defineInt("SlideDuration", 25, 0, 20 * 60, "滑铲持续时间，单位为 tick。", "Slide duration in ticks.");
+        SLIDE_AIR_DURATION = defineInt("SlideAirDuration", 30, 0, 20 * 60, "滑铲最大滞空时间，单位为 tick。", "Maximum slide air duration in ticks.");
+        DAP_TIMES = defineInt("DapTimes", 2, 0, 64, "打水漂次数上限。", "Maximum water dap count.");
+        SLIDE_COOLDOWN = defineInt("SlideCooldown", 60, 0, 20 * 60, "滑铲冷却时间，单位为 tick。", "Slide cooldown in ticks.");
         SLIDE_START_BOOST = defineDouble("SlideStartBoost", 0.5, 0, 5, "滑铲开始时追加的水平速度。", "Horizontal boost applied when slide starts.");
         SLIDE_AIR_FORWARD_BOOST = defineDouble("SlideAirForwardBoost", 0.1, 0, 5, "滑铲离地时追加的水平速度。", "Horizontal boost when slide leaves the ground.");
         SLIDE_AIR_FALL_ACCELERATION = defineDouble("SlideAirFallAcceleration", -0.025, -5, 5, "滑铲滞空时每 tick 追加的竖直速度。", "Vertical acceleration applied while sliding in air.");
