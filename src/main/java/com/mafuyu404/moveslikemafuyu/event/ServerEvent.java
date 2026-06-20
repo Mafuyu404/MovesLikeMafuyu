@@ -1,5 +1,7 @@
 package com.mafuyu404.moveslikemafuyu.event;
 
+import net.neoforged.fml.common.EventBusSubscriber;
+
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
 import com.mafuyu404.moveslikemafuyu.capability.MoveAttribute;
@@ -8,16 +10,16 @@ import com.mafuyu404.moveslikemafuyu.compat.TaczCompat;
 import com.mafuyu404.moveslikemafuyu.util.PoseHelper;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-@Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID)
+@EventBusSubscriber(modid = MovesLikeMafuyu.MODID)
 public class ServerEvent {
     private static final Set<UUID> rollInvulnerablePlayers = new HashSet<>();
 
@@ -31,19 +33,19 @@ public class ServerEvent {
         player.removeTag("roll");
     }
     @SubscribeEvent
-    public static void serverSwim(TickEvent.PlayerTickEvent event) {
+    public static void serverSwim(PlayerTickEvent.Post event) {
         // 服务端同步才能改玩家碰撞箱
-        Player player = event.player;
+        Player player = event.getEntity();
         if (player.isLocalPlayer() || player.isSpectator()) return;
 
-        if (player.getTags().contains("roll") && Config.enable("RollInvulnerability")) {
+        if (player.entityTags().contains("roll") && Config.enable("RollInvulnerability")) {
             rollInvulnerablePlayers.add(player.getUUID());
             player.invulnerableTime = Math.max(player.invulnerableTime, MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_DURATION));
         } else if (rollInvulnerablePlayers.remove(player.getUUID()) && player.invulnerableTime <= MoveAttributeResolver.getInt(player, MoveAttribute.ROLL_DURATION)) {
             player.invulnerableTime = 0;
         }
 
-        if (player.getTags().contains("craw")) {
+        if (player.entityTags().contains("craw")) {
             PoseHelper.forcePose(player, Pose.SWIMMING);
             TaczCompat.syncCrawling(player, true);
             return;

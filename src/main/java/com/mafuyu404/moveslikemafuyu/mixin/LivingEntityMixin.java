@@ -26,7 +26,7 @@ public abstract class LivingEntityMixin {
     @Inject(method = "isFallFlying", at = @At("HEAD"), cancellable = true)
     private void onCheckFallFlying(CallbackInfoReturnable<Boolean> cir) {
         if (((Entity) (Object) this) instanceof Player player) {
-            if (player.getTags().contains("slide") && !player.isSpectator()) {
+            if (player.entityTags().contains("slide") && !player.isSpectator()) {
                 cir.setReturnValue(true);
             }
         }

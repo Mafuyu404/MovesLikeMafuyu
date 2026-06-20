@@ -1,11 +1,14 @@
 package com.mafuyu404.moveslikemafuyu.capability;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.neoforged.neoforge.common.util.ValueIOSerializable;
 
 import java.util.EnumMap;
 import java.util.Map;
 
-public class PlayerMoveAttributes {
+public class PlayerMoveAttributes implements ValueIOSerializable {
     private final EnumMap<MoveAttribute, Double> overrides = new EnumMap<>(MoveAttribute.class);
 
     public Double getOverride(MoveAttribute attribute) {
@@ -46,8 +49,23 @@ public class PlayerMoveAttributes {
         overrides.clear();
         for (MoveAttribute attribute : MoveAttribute.values()) {
             if (tag.contains(attribute.key())) {
-                set(attribute, tag.getDouble(attribute.key()));
+                set(attribute, tag.getDouble(attribute.key()).orElse(attribute.defaultValue()));
             }
+        }
+    }
+
+    @Override
+    public void serialize(ValueOutput output) {
+        for (Map.Entry<MoveAttribute, Double> entry : overrides.entrySet()) {
+            output.putDouble(entry.getKey().key(), entry.getValue());
+        }
+    }
+
+    @Override
+    public void deserialize(ValueInput input) {
+        overrides.clear();
+        for (MoveAttribute attribute : MoveAttribute.values()) {
+            set(attribute, input.getDoubleOr(attribute.key(), attribute.defaultValue()));
         }
     }
 }

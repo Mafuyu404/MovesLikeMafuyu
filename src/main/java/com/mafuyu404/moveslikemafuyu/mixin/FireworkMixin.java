@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class FireworkMixin {
     @Redirect(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;isFallFlying()Z"))
     private boolean avoidElytraBoost(Player player) {
-        if (player.getTags().contains("slide")) return false;
+        if (player.entityTags().contains("slide")) return false;
         return player.isFallFlying();
     }
 }

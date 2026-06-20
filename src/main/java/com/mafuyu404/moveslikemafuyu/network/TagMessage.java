@@ -1,13 +1,5 @@
 package com.mafuyu404.moveslikemafuyu.network;
 
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Pose;
-import com.mafuyu404.moveslikemafuyu.util.PoseHelper;
-import net.minecraftforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
-
 public class TagMessage {
     private final String tag;
     private final boolean state;
@@ -17,40 +9,11 @@ public class TagMessage {
         this.state = state;
     }
 
-    public static void encode(TagMessage msg, FriendlyByteBuf buffer) {
-        buffer.writeUtf(msg.tag);
-        buffer.writeBoolean(msg.state);
+    public String tag() {
+        return tag;
     }
 
-    public static TagMessage decode(FriendlyByteBuf buffer) {
-        return new TagMessage(buffer.readUtf(), buffer.readBoolean());
-    }
-
-    public static void handle(TagMessage msg, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> {
-            ServerPlayer player = ctx.get().getSender();
-            if (player == null) return;
-            if (msg.state) {
-                if (!player.getTags().contains(msg.tag)) {
-                    player.addTag(msg.tag);
-                }
-                if (msg.tag.equals("craw")) {
-                    PoseHelper.forcePose(player, Pose.SWIMMING);
-                }
-                if (msg.tag.equals("roll_shift")) {
-                    player.setShiftKeyDown(true);
-                }
-            }
-            else {
-                player.removeTag(msg.tag);
-                if (msg.tag.equals("craw")) {
-                    PoseHelper.clearForcedPose(player);
-                }
-                if (msg.tag.equals("roll_shift")) {
-                    player.setShiftKeyDown(false);
-                }
-            }
-        });
-        ctx.get().setPacketHandled(true);
+    public boolean state() {
+        return state;
     }
 }

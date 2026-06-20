@@ -2,7 +2,7 @@ package com.mafuyu404.moveslikemafuyu.util;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
-import net.minecraftforge.client.event.InputEvent;
+import net.neoforged.neoforge.client.event.InputEvent;
 
 public final class KeyInputHelper {
     private KeyInputHelper() {

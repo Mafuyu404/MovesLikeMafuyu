@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.mafuyu404.moveslikemafuyu.mixin",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_25",
   "refmap": "moveslikemafuyu.refmap.json",
   "mixins": [
     "FireworkMixin",

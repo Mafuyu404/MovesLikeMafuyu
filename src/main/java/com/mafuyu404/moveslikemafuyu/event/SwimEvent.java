@@ -1,5 +1,7 @@
 package com.mafuyu404.moveslikemafuyu.event;
 
+import net.neoforged.fml.common.EventBusSubscriber;
+
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
 import com.mafuyu404.moveslikemafuyu.capability.MoveAttribute;
@@ -13,22 +15,22 @@ import net.minecraft.client.Options;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.InputEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
 import java.util.Timer;
 import java.util.TimerTask;
 
-@Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
 public class SwimEvent {
     private static int cooldown;
 
     @SubscribeEvent
-    public static void swim(TickEvent.PlayerTickEvent event) {
-        Player player = event.player;
+    public static void swim(PlayerTickEvent.Post event) {
+        Player player = event.getEntity();
 
         if (!player.isLocalPlayer() || player.isSpectator()) return;
         Options options = Minecraft.getInstance().options;
@@ -39,17 +41,17 @@ public class SwimEvent {
         if (canSwimmingBoost(player)) KeyPrompts.show(options.keySprint.getKey().toString(), "smartkeyprompts.moveslikemafuyu.swimming_boost");
         if (canSwimmingPush(player)) KeyPrompts.show(options.keyJump.getKey().toString(), "smartkeyprompts.moveslikemafuyu.swimming_push");
 
+        boolean surfaceJumping = !player.isUnderWater() && options.keyJump.isDown();
         boolean canShallowSwim = Config.enable("ShallowSwimming") && player.isInWater() && !player.isUnderWater();
         if (canShallowSwim && !options.keySprint.isDown() && player.getDeltaMovement().length() < 0.1) {
             player.setSwimming(false);
             player.setSprinting(false);
         }
-        if (canShallowSwim && (options.keySprint.isDown() || player.isSprinting())) {
+        if (canShallowSwim && !surfaceJumping && (options.keySprint.isDown() || player.isSprinting())) {
             player.setSprinting(true);
             player.setSwimming(true);
         }
-        if (Config.enable("Freestyle") && !player.isUnderWater() && player.isSwimming() && !player.getTags().contains("slide")) {
-            options.keyJump.setDown(false);
+        if (Config.enable("Freestyle") && !surfaceJumping && !player.isUnderWater() && player.isSwimming() && !player.entityTags().contains("slide")) {
             Vec3 motion = player.getDeltaMovement();
             player.setDeltaMovement(motion.x, 0, motion.z);
         }
@@ -88,7 +90,7 @@ public class SwimEvent {
     }
 
     public static boolean canSwimmingPush(Player player) {
-        return Config.enable("SwimmingPush") && !player.isUnderWater() && player.isInWater() && player.isSwimming() && SlideEvent.cooldown <= 0 && !player.getTags().contains("slide");
+        return Config.enable("SwimmingPush") && !player.isUnderWater() && player.isInWater() && player.isSwimming() && SlideEvent.cooldown <= 0 && !player.entityTags().contains("slide");
     }
 
     private static void handleSprintPress(Player player) {

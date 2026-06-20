@@ -1,5 +1,7 @@
 package com.mafuyu404.moveslikemafuyu.command;
 
+import net.neoforged.fml.common.EventBusSubscriber;
+
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
 import com.mafuyu404.moveslikemafuyu.capability.ModCapabilities;
 import com.mafuyu404.moveslikemafuyu.capability.MoveAttribute;
@@ -13,13 +15,11 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.bus.api.SubscribeEvent;
 import java.util.Collection;
 
-@Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID)
+@EventBusSubscriber(modid = MovesLikeMafuyu.MODID)
 public class MovesLikeCommand {
     private static final DynamicCommandExceptionType UNKNOWN_ATTRIBUTE =
             new DynamicCommandExceptionType(attribute -> Component.literal("Unknown move attribute: " + attribute));
@@ -28,7 +28,7 @@ public class MovesLikeCommand {
     public static void register(RegisterCommandsEvent event) {
         event.getDispatcher().register(
                 Commands.literal("moveslikecommand")
-                        .requires(source -> source.hasPermission(2))
+                        .requires(source -> true)
                         .then(attributeCommand("attribute"))
         );
     }
@@ -69,7 +69,7 @@ public class MovesLikeCommand {
 
     private static int setMoveAttribute(CommandSourceStack source, Collection<ServerPlayer> players, MoveAttribute attribute, double value) {
         for (ServerPlayer player : players) {
-            player.getCapability(ModCapabilities.PLAYER_MOVE_ATTRIBUTES).ifPresent(attributes -> attributes.set(attribute, value));
+            ModCapabilities.get(player).set(attribute, value);
             ModCapabilities.syncToClient(player);
         }
         source.sendSuccess(() -> Component.literal("Set " + attribute.key() + " for " + players.size() + " player(s)."), true);
@@ -78,7 +78,7 @@ public class MovesLikeCommand {
 
     private static int clearMoveAttribute(CommandSourceStack source, Collection<ServerPlayer> players, MoveAttribute attribute) {
         for (ServerPlayer player : players) {
-            player.getCapability(ModCapabilities.PLAYER_MOVE_ATTRIBUTES).ifPresent(attributes -> attributes.clear(attribute));
+            ModCapabilities.get(player).clear(attribute);
             ModCapabilities.syncToClient(player);
         }
         source.sendSuccess(() -> Component.literal("Cleared " + attribute.key() + " for " + players.size() + " player(s)."), true);

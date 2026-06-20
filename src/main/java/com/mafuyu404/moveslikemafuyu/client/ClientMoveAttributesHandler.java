@@ -9,7 +9,6 @@ public class ClientMoveAttributesHandler {
     public static void handle(CompoundTag tag) {
         Player player = Minecraft.getInstance().player;
         if (player == null) return;
-        player.getCapability(ModCapabilities.PLAYER_MOVE_ATTRIBUTES)
-                .ifPresent(attributes -> attributes.deserializeNBT(tag));
+        ModCapabilities.get(player).deserializeNBT(tag);
     }
 }

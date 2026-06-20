@@ -1,29 +1,31 @@
 package com.mafuyu404.moveslikemafuyu.event;
 
+import net.neoforged.fml.common.EventBusSubscriber;
+
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
 import com.mafuyu404.moveslikemafuyu.registry.ModEffects;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.ForgeMod;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.common.NeoForgeMod;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-@Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
 public class AutoDodgeEvent {
     private static final int PREDICT_TICKS = 10;
     private static final int EMERGENCY_COOLDOWN_TICKS = 6;
@@ -41,14 +43,14 @@ public class AutoDodgeEvent {
     private static Projectile joinedProjectile;
 
     @SubscribeEvent
-    public static void onClientTick(TickEvent.PlayerTickEvent event) {
+    public static void onClientTick(PlayerTickEvent.Post event) {
         if (!Config.enable("AutoDodge")) return;
-        Player player = event.player;
+        Player player = event.getEntity();
         if (!hasAutoDodgeEffect(player)) return;
-        if (event.phase == TickEvent.Phase.END && cooldown > 0) cooldown--;
+        if (cooldown > 0) cooldown--;
         Projectile extraProjectile = projectileJoinScanTicks > 0 && joinedProjectile != null && joinedProjectile.isAlive() ? joinedProjectile : null;
         tryAutoDodge(player, true, extraProjectile);
-        if (event.phase == TickEvent.Phase.END && projectileJoinScanTicks > 0) projectileJoinScanTicks--;
+        if (projectileJoinScanTicks > 0) projectileJoinScanTicks--;
     }
 
     @SubscribeEvent
@@ -77,8 +79,8 @@ public class AutoDodgeEvent {
 
     private static void tryAutoDodge(Player player, boolean allowEmergency, Projectile extraProjectile) {
         if (!player.isLocalPlayer() || player.isSpectator() || player.isInWater() || !player.onGround()) return;
-        if (player.getTags().contains("slide")) return;
-        if (player.getTags().contains("craw") && !CrawEvent.isAutoCraw(player)) return;
+        if (player.entityTags().contains("slide")) return;
+        if (player.entityTags().contains("craw") && !CrawEvent.isAutoCraw(player)) return;
 
         List<Projectile> projectiles = getProjectilesInReach(player, extraProjectile);
         if (projectiles.isEmpty()) return;
@@ -121,7 +123,7 @@ public class AutoDodgeEvent {
     }
 
     private static boolean hasAutoDodgeEffect(Player player) {
-        return player != null && player.hasEffect(ModEffects.AUTO_DODGE.get());
+        return player != null && player.hasEffect(ModEffects.AUTO_DODGE);
     }
 
     private static List<Projectile> getProjectilesInReach(Player player) {
@@ -129,7 +131,7 @@ public class AutoDodgeEvent {
     }
 
     private static List<Projectile> getProjectilesInReach(Player player, Projectile extraProjectile) {
-        double reach = Math.max(3.0, player.getAttributeValue(ForgeMod.BLOCK_REACH.get()));
+        double reach = 4.5D;
         double maxLeadDistance = reach + 12.0;
         AABB searchBox = player.getBoundingBox().inflate(maxLeadDistance);
         Vec3 playerCenter = player.getBoundingBox().getCenter();

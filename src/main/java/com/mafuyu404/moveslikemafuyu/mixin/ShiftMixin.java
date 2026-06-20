@@ -21,8 +21,8 @@ public abstract class ShiftMixin extends LivingEntity {
 
     @Inject(method = "maybeBackOffFromEdge", at = @At("HEAD"), cancellable = true)
     private void redirectShiftCheck(Vec3 p_36201_, MoverType p_36202_, CallbackInfoReturnable<Vec3> cir) {
-        boolean ignoreSlideEdge = Config.enable("SlideIgnoreEdgeProtection") && this.getTags().contains("slide");
-        boolean ignoreRollEdge = Config.enable("RollIgnoreEdgeProtection") && this.getTags().contains("roll");
+        boolean ignoreSlideEdge = Config.enable("SlideIgnoreEdgeProtection") && this.entityTags().contains("slide");
+        boolean ignoreRollEdge = Config.enable("RollIgnoreEdgeProtection") && this.entityTags().contains("roll");
         if ((ignoreSlideEdge || ignoreRollEdge) && this.onGround()) {
             cir.setReturnValue(p_36201_);
         }

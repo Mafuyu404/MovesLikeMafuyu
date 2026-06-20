@@ -1,7 +1,7 @@
 package com.mafuyu404.moveslikemafuyu.compat;
 
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fml.ModList;
+import net.neoforged.fml.ModList;
 
 public class KeyPrompts {
     private static final String MOD_ID = "smartkeyprompts";

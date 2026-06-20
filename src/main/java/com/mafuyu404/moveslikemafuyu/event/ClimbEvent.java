@@ -1,5 +1,7 @@
 package com.mafuyu404.moveslikemafuyu.event;
 
+import net.neoforged.fml.common.EventBusSubscriber;
+
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
 import com.mafuyu404.moveslikemafuyu.capability.MoveAttribute;
@@ -16,13 +18,13 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.InputEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
 public class ClimbEvent {
     private static long cooldown;
     public static boolean Falling = true;
@@ -30,8 +32,8 @@ public class ClimbEvent {
     private static double FALLING_CATCH_DISTANCE = 0.6;
 
     @SubscribeEvent
-    public static void tick(TickEvent.PlayerTickEvent event) {
-        Player player = event.player;
+    public static void tick(PlayerTickEvent.Post event) {
+        Player player = event.getEntity();
         if (!player.isLocalPlayer() || player.isSpectator()) return;
         Options options = Minecraft.getInstance().options;
         if (cooldown > 0 && cooldown <= MoveAttributeResolver.getInt(player, MoveAttribute.CLIMB_JUMP_COOLDOWN)) {
@@ -84,7 +86,7 @@ public class ClimbEvent {
         BlockState state = player.level().getBlockState(checkPos);
         String[] type = state.getBlock().getDescriptionId().split("\\.");
         boolean checkBlock = isClimbableWall(player.level(), checkPos) || Config.CLIMB_BLOCK_WHITELIST.get().contains(type[1] + ":" + type[2]);
-        if (!player.onGround() && checkBlock && !player.level().getBlockState(belowPos).isSolidRender(player.level(), belowPos) && !isClimbableWall(player.level(), upperPos) && !isClimbableWall(player.level(), player.blockPosition())) {
+        if (!player.onGround() && checkBlock && !player.level().getBlockState(belowPos).isSolidRender() && !isClimbableWall(player.level(), upperPos) && !isClimbableWall(player.level(), player.blockPosition())) {
             AABB playerBB = player.getBoundingBox();
             double distance = ClimbEvent.Falling ? FALLING_CATCH_DISTANCE : CATCH_DISTANCE;
             AABB wallBB = new AABB(checkPos).inflate(distance);

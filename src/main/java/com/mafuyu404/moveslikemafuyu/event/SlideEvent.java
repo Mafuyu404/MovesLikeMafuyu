@@ -1,5 +1,7 @@
 package com.mafuyu404.moveslikemafuyu.event;
 
+import net.neoforged.fml.common.EventBusSubscriber;
+
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
 import com.mafuyu404.moveslikemafuyu.capability.MoveAttribute;
@@ -19,17 +21,17 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.InputEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
 public class SlideEvent {
     private static double timer;
     private static int air_timer;
@@ -42,8 +44,8 @@ public class SlideEvent {
     private static long lastShiftPressTime;
     private static CameraType storedCameraType;
     @SubscribeEvent
-    public static void slideAction(TickEvent.PlayerTickEvent event) {
-        Player player = event.player;
+    public static void slideAction(PlayerTickEvent.Post event) {
+        Player player = event.getEntity();
         if (!player.isLocalPlayer() || player.isSpectator()) return;
         Options options = Minecraft.getInstance().options;
 
@@ -59,7 +61,7 @@ public class SlideEvent {
         if (canSlide(player)) KeyPrompts.show(options.keyShift.getKey().toString(), "smartkeyprompts.moveslikemafuyu.slide");
         if (canRefreshDap(player)) KeyPrompts.show(options.keyJump.getKey().toString(), "smartkeyprompts.moveslikemafuyu.dap");
 
-        if (player.getTags().contains("slide")) {
+        if (player.entityTags().contains("slide")) {
             if (storedCameraType != null) options.setCameraType(storedCameraType);
             if (player.getDeltaMovement().length() < 0.1) {
                 cancel(player);
@@ -148,12 +150,12 @@ public class SlideEvent {
         }
     }
     @SubscribeEvent
-    public static void onCollision(TickEvent.PlayerTickEvent event) {
+    public static void onCollision(PlayerTickEvent.Post event) {
         if (!Config.enable("SlideKnock")) return;
-        Player player = event.player;
+        Player player = event.getEntity();
         if (!player.isLocalPlayer() || player.isSpectator()) return;
         Options options = Minecraft.getInstance().options;
-        if (!player.getTags().contains("slide")) return;
+        if (!player.entityTags().contains("slide")) return;
         if (System.currentTimeMillis() - lastKnockTime < MoveAttributeResolver.getInt(player, MoveAttribute.SLIDE_KNOCK_DELAY)) return;
         List<Entity> AllEntities = player.level().getEntities(player, player.getBoundingBox().inflate(0.1));
         if (AllEntities.isEmpty()) return;
@@ -218,7 +220,7 @@ public class SlideEvent {
         Minecraft.getInstance().options.keyShift.setDown(false);
         player.setShiftKeyDown(false);
         player.stopFallFlying();
-        if (!player.getTags().contains("craw")) player.setSprinting(true);
+        if (!player.entityTags().contains("craw")) player.setSprinting(true);
         if (player.isInWater()) {
             Vec3 motion = player.getDeltaMovement();
             player.setDeltaMovement(motion.x, 0, motion.z);
@@ -227,8 +229,8 @@ public class SlideEvent {
         cooldown = MoveAttributeResolver.getInt(player, MoveAttribute.SLIDE_COOLDOWN);
     }
     @SubscribeEvent
-    public static void avoidDamage(LivingHurtEvent event) {
-        if (event.getEntity().getTags().contains("slide") && event.getSource().is(DamageTypes.FLY_INTO_WALL)) {
+    public static void avoidDamage(LivingIncomingDamageEvent event) {
+        if (event.getEntity().entityTags().contains("slide") && event.getSource().is(DamageTypes.FLY_INTO_WALL)) {
             event.setCanceled(true);
         }
     }
@@ -237,10 +239,10 @@ public class SlideEvent {
         return player.isSprinting() && player.onGround() && !player.isInWater() && !player.isFallFlying() && player.isLocalPlayer() && !Minecraft.getInstance().options.keyJump.isDown() && Config.enable("Slide");
     }
     public static boolean canRefreshDap(Player player) {
-        return player.getTags().contains("slide") && Config.enable("Dap") && canDap && !dap_refreshed;
+        return player.entityTags().contains("slide") && Config.enable("Dap") && canDap && !dap_refreshed;
     }
     private static void handleJumpPress(Player player) {
-        if (player.getTags().contains("slide")) {
+        if (player.entityTags().contains("slide")) {
             if (canRefreshDap(player)) {
                 dap_refreshed = true;
                 dap_times++;
@@ -254,13 +256,13 @@ public class SlideEvent {
         boolean doubleTapSlide = !Config.enable("SlideDoubleTapTrigger")
                 || currentTime - lastShiftPressTime < MoveAttributeResolver.getInt(player, MoveAttribute.CRAW_DOUBLE_PRESS_DELAY);
         if (canSlide(player) && doubleTapSlide) {
-            if (!player.getTags().contains("craw")) startSlide(player);
+            if (!player.entityTags().contains("craw")) startSlide(player);
         }
         lastShiftPressTime = currentTime;
     }
 
     private static void handleDownPress(Player player) {
-        if (player.getTags().contains("slide")) {
+        if (player.entityTags().contains("slide")) {
             cancel(player);
         }
     }

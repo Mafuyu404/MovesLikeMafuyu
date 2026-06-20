@@ -1,5 +1,7 @@
 package com.mafuyu404.moveslikemafuyu.event;
 
+import net.neoforged.fml.common.EventBusSubscriber;
+
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
 import com.mafuyu404.moveslikemafuyu.capability.MoveAttribute;
@@ -13,13 +15,13 @@ import net.minecraft.client.Options;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.InputEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
 public class RollEvent {
     private static double timer;
     private static int cooldown;
@@ -33,9 +35,8 @@ public class RollEvent {
     private static long lastJumpPressTime;
 
     @SubscribeEvent
-    public static void rollAction(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
-        Player player = event.player;
+    public static void rollAction(PlayerTickEvent.Post event) {
+        Player player = event.getEntity();
         if (!player.isLocalPlayer() || player.isSpectator()) return;
 
         Options options = Minecraft.getInstance().options;
@@ -44,7 +45,7 @@ public class RollEvent {
         }
 
         previousProgress = progress;
-        if (player.getTags().contains("roll")) {
+        if (player.entityTags().contains("roll")) {
             if (!Config.enable("Roll")) {
                 cancelRoll(player);
                 return;
@@ -101,7 +102,7 @@ public class RollEvent {
     }
 
     public static void startRoll(Player player) {
-        if (!Config.enable("Roll") || player.getTags().contains("roll")) return;
+        if (!Config.enable("Roll") || player.entityTags().contains("roll")) return;
         timer = 0;
         previousProgress = 0;
         progress = 0;
@@ -118,11 +119,11 @@ public class RollEvent {
             player.setDeltaMovement(player.getDeltaMovement().add(0, MoveAttributeResolver.getDouble(player, MoveAttribute.ROLL_AIR_VERTICAL_SPEED), 0));
         }
         if (rollMovementEnabled) applyRollMovement(player, 0.0f);
-        player.playSound(SoundEvents.ARMOR_EQUIP_LEATHER, 0.6f, 1.2f);
+        player.playSound(SoundEvents.ARMOR_EQUIP_LEATHER.value(), 0.6f, 1.2f);
     }
 
     public static void cancelRoll(Player player) {
-        if (!player.getTags().contains("roll")) return;
+        if (!player.entityTags().contains("roll")) return;
         player.removeTag("roll");
         setRollShift(player, false);
         NetworkHandler.CHANNEL.sendToServer(new TagMessage("roll", false));
@@ -143,7 +144,7 @@ public class RollEvent {
     }
 
     public static boolean isRolling(Player player) {
-        return player != null && player.getTags().contains("roll");
+        return player != null && player.entityTags().contains("roll");
     }
 
     private static boolean canRoll(Player player) {
@@ -153,9 +154,9 @@ public class RollEvent {
                 && (player.onGround() || Config.enable("AirRoll"))
                 && !player.isInWater()
                 && !player.isFallFlying()
-                && !player.getTags().contains("roll")
-                && !player.getTags().contains("slide")
-                && !player.getTags().contains("craw");
+                && !player.entityTags().contains("roll")
+                && !player.entityTags().contains("slide")
+                && !player.entityTags().contains("craw");
     }
 
     private static boolean canPromptRoll(Player player, Options options) {

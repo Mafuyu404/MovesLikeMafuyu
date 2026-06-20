@@ -1,5 +1,7 @@
 package com.mafuyu404.moveslikemafuyu.event;
 
+import net.neoforged.fml.common.EventBusSubscriber;
+
 import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
 import com.mafuyu404.moveslikemafuyu.capability.MoveAttribute;
@@ -15,21 +17,21 @@ import net.minecraft.client.Options;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.InputEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
 public class CrawEvent {
     private static long lastShiftPressTime;
     private static long lastJumpPressTime;
     private static int autoCrawReleaseTicks;
 
     @SubscribeEvent
-    public static void onClientTick(TickEvent.PlayerTickEvent event) {
-        Player player = event.player;
+    public static void onClientTick(PlayerTickEvent.Post event) {
+        Player player = event.getEntity();
         if (!player.isLocalPlayer() || player.isSpectator()) return;
         Options options = Minecraft.getInstance().options;
 
@@ -38,12 +40,12 @@ public class CrawEvent {
         if (canCrawSlide(player))
             KeyPrompts.show(options.keySprint.getKey().toString(), "smartkeyprompts.moveslikemafuyu.slide");
 
-        if (Config.enable("Craw") && player.getTags().contains("craw")
-                && !player.isSpectator() && !player.getTags().contains("slide")) {
+        if (Config.enable("Craw") && player.entityTags().contains("craw")
+                && !player.isSpectator() && !player.entityTags().contains("slide")) {
             options.keyShift.setDown(false);
             PoseHelper.forcePose(player, Pose.SWIMMING);
         }
-        if (player.getTags().contains("auto_craw")) {
+        if (player.entityTags().contains("auto_craw")) {
             if (AutoDodgeEvent.canStandSafely(player)) {
                 cancelCraw(player);
             } else if (autoCrawReleaseTicks > 0) {
@@ -102,7 +104,7 @@ public class CrawEvent {
     }
 
     public static void startTemporaryCraw(Player player, int ticks) {
-        if (!player.getTags().contains("craw") || player.getTags().contains("auto_craw")) {
+        if (!player.entityTags().contains("craw") || player.entityTags().contains("auto_craw")) {
             player.addTag("auto_craw");
             startCraw(player);
             autoCrawReleaseTicks = ticks;
@@ -137,12 +139,12 @@ public class CrawEvent {
     }
 
     public static boolean isAutoCraw(Player player) {
-        return player.getTags().contains("auto_craw");
+        return player.entityTags().contains("auto_craw");
     }
 
     public static boolean canLeap(Player player) {
         return Config.enable("Leap")
-                && !player.getTags().contains("craw")
+                && !player.entityTags().contains("craw")
                 && player.isSprinting()
                 && System.currentTimeMillis() - lastJumpPressTime < MoveAttributeResolver.getInt(player, MoveAttribute.LEAP_JUMP_TIMER)
                 && player.getDeltaMovement().y > 0
@@ -155,12 +157,12 @@ public class CrawEvent {
                 && player.getPose() == Pose.SWIMMING
                 && player.onGround()
                 && SlideEvent.cooldown <= 0
-                && !player.getTags().contains("slide");
+                && !player.entityTags().contains("slide");
     }
 
     private static void handleShiftPress(Player player) {
         long currentTime = System.currentTimeMillis();
-        if (player.getTags().contains("craw")) {
+        if (player.entityTags().contains("craw")) {
             cancelCraw(player);
         } else if (Config.enable("Craw") && currentTime - lastShiftPressTime < MoveAttributeResolver.getInt(player, MoveAttribute.CRAW_DOUBLE_PRESS_DELAY) && player.onGround()) {
             startCraw(player);
@@ -183,7 +185,7 @@ public class CrawEvent {
         if (player.onGround()) {
             lastJumpPressTime = System.currentTimeMillis();
         }
-        if (Config.enable("JumpCancelCraw") && player.getTags().contains("craw")) {
+        if (Config.enable("JumpCancelCraw") && player.entityTags().contains("craw")) {
             cancelCraw(player);
             options.keyJump.setDown(false);
         }
