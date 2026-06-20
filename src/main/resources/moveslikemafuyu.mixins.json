@@ -12,7 +12,9 @@
   ],
   "client": [
     "RollGameRendererMixin",
-    "RollLivingEntityRendererMixin"
+    "RollLivingEntityRendererMixin",
+    "SlideCameraBobMixin",
+    "SlideCameraEyeHeightMixin"
   ],
   "injectors": {
     "defaultRequire": 1

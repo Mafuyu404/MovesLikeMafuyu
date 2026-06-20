@@ -11,6 +11,7 @@ import com.mafuyu404.moveslikemafuyu.network.KnockMessage;
 import com.mafuyu404.moveslikemafuyu.network.NetworkHandler;
 import com.mafuyu404.moveslikemafuyu.network.TagMessage;
 import com.mafuyu404.moveslikemafuyu.util.KeyInputHelper;
+import com.mafuyu404.moveslikemafuyu.util.PoseHelper;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -19,6 +20,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
@@ -33,8 +35,10 @@ import java.util.List;
 
 @EventBusSubscriber(modid = MovesLikeMafuyu.MODID, value = Dist.CLIENT)
 public class SlideEvent {
+    private static final int SLIDE_CROUCH_TRANSITION_TICKS = 3;
     private static double timer;
     private static int air_timer;
+    private static int crouchTransitionTicks;
     public static int cooldown;
     public static int dap_times;
     public static double dap_motion = 1;
@@ -43,6 +47,7 @@ public class SlideEvent {
     private static long lastKnockTime = 0;
     private static long lastShiftPressTime;
     private static CameraType storedCameraType;
+    private static float slideCameraEyeHeight = Float.NaN;
     @SubscribeEvent
     public static void slideAction(PlayerTickEvent.Post event) {
         Player player = event.getEntity();
@@ -67,6 +72,7 @@ public class SlideEvent {
                 cancel(player);
                 return;
             }
+            ensureSlidePose(player);
             options.keyShift.setDown(true);
             Vec3 motion = player.getDeltaMovement();
             Vec3 lookDirection = player.getLookAngle();
@@ -184,6 +190,8 @@ public class SlideEvent {
         if (!Config.enable("Slide") || cooldown > 0) return;
         timer = MoveAttributeResolver.getInt(player, MoveAttribute.SLIDE_DURATION);
         air_timer = MoveAttributeResolver.getInt(player, MoveAttribute.SLIDE_AIR_DURATION);
+        crouchTransitionTicks = SLIDE_CROUCH_TRANSITION_TICKS;
+        slideCameraEyeHeight = player.getEyeHeight(Pose.CROUCHING);
         dap_times = MoveAttributeResolver.getInt(player, MoveAttribute.DAP_TIMES);
         canDap = false;
         dap_motion = 1;
@@ -193,6 +201,7 @@ public class SlideEvent {
         player.addTag("slide");
         Vec3 lookDirection = horizontalDirection(direction);
         player.startFallFlying();
+        ensureSlidePose(player);
         player.setDeltaMovement(
             player.getDeltaMovement().add(
                     lookDirection.x * MoveAttributeResolver.getDouble(player, MoveAttribute.SLIDE_START_BOOST),
@@ -226,7 +235,41 @@ public class SlideEvent {
             player.setDeltaMovement(motion.x, 0, motion.z);
         }
         player.removeTag("slide");
+        crouchTransitionTicks = 0;
+        slideCameraEyeHeight = Float.NaN;
+        if (player.entityTags().contains("craw")) {
+            PoseHelper.forcePose(player, Pose.SWIMMING);
+        } else if (player.getForcedPose() == Pose.FALL_FLYING) {
+            PoseHelper.clearForcedPose(player);
+        } else if (player.getForcedPose() == Pose.CROUCHING) {
+            PoseHelper.clearForcedPose(player);
+        }
         cooldown = MoveAttributeResolver.getInt(player, MoveAttribute.SLIDE_COOLDOWN);
+    }
+
+    private static void ensureSlidePose(Player player) {
+        Pose targetPose = crouchTransitionTicks > 0 ? Pose.CROUCHING : Pose.FALL_FLYING;
+        if (player.getForcedPose() != targetPose || player.getPose() != targetPose) {
+            PoseHelper.forcePose(player, targetPose);
+        }
+        if (crouchTransitionTicks > 0) {
+            crouchTransitionTicks--;
+        }
+    }
+
+    public static boolean isSliding(Player player) {
+        return player != null && player.entityTags().contains("slide");
+    }
+
+    public static float getSlideCameraEyeHeight(Player player) {
+        if (!isSliding(player)) return Float.NaN;
+        float target = crouchTransitionTicks > 0 ? player.getEyeHeight(Pose.CROUCHING) : player.getEyeHeight(Pose.FALL_FLYING);
+        if (Float.isNaN(slideCameraEyeHeight)) {
+            slideCameraEyeHeight = target;
+        } else {
+            slideCameraEyeHeight = Math.min(slideCameraEyeHeight, target);
+        }
+        return slideCameraEyeHeight;
     }
     @SubscribeEvent
     public static void avoidDamage(LivingIncomingDamageEvent event) {
