@@ -22,7 +22,7 @@ public class MovesLikeMafuyu {
     public MovesLikeMafuyu(IEventBus modEventBus, ModContainer modContainer, Dist dist) {
         ModAttachments.register(modEventBus);
         ModEffects.register(modEventBus);
-        modContainer.registerConfig(ModConfig.Type.SERVER, Config.SPEC, "moveslikemafuyu-server.toml");
+        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC, "moveslikemafuyu-common.toml");
         if (dist == Dist.CLIENT) {
             modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
         }

@@ -24,7 +24,7 @@ import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
-@EventBusSubscriber(modid = MovesLikeMafuyu.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = MovesLikeMafuyu.MOD_ID)
 public class ModNetworking {
     @SubscribeEvent
     public static void register(RegisterPayloadHandlersEvent event) {
