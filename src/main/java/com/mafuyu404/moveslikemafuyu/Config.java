@@ -34,6 +34,8 @@ public class Config {
     public static final ForgeConfigSpec.BooleanValue ENABLE_LEAP;
     public static final ForgeConfigSpec.BooleanValue ENABLE_JUMP_CANCEL_CRAW;
     public static final ForgeConfigSpec.BooleanValue ENABLE_AUTO_DODGE;
+    public static final ForgeConfigSpec.BooleanValue AUTO_DODGE_ONLY_DAMAGING_PROJECTILES;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_SHORTCUT;
 
     public static final ForgeConfigSpec.IntValue SLIDE_DURATION;
     public static final ForgeConfigSpec.IntValue SLIDE_AIR_DURATION;
@@ -125,6 +127,16 @@ public class Config {
 
         BUILDER.push("auto_dodge");
         ENABLE_AUTO_DODGE = defineBoolean("enableAutoDodge", true, "是否启用自动闪避。", "Automatically dodge incoming projectiles.");
+        AUTO_DODGE_ONLY_DAMAGING_PROJECTILES = defineBoolean(
+                "onlyDodgeDamagingProjectiles",
+                true,
+                "只闪避能对当前目标造成伤害的弹射物。关闭后恢复为闪避所有弹射物。",
+                "Only dodge projectiles that can damage the current target. Disable to restore the previous behavior."
+        );
+        BUILDER.pop();
+
+        BUILDER.push("shortcut");
+        ENABLE_SHORTCUT = defineBoolean("enableShortcut", true, "是否为滑铲和翻滚注册独立快捷键（滑铲默认 Shift，翻滚默认 Ctrl）。", "Register dedicated shortcut keys for slide (Shift by default) and roll (Ctrl by default).");
         BUILDER.pop();
 
         BUILDER.push("roll_attributes");

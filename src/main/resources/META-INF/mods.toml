@@ -61,3 +61,10 @@ mandatory = true
 versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "BOTH"
+# 可选环境依赖：Touhou Little Maid，装了才能让小女仆也获得自动闪避 buff。
+[[dependencies."${mod_id}"]]
+modId = "touhou_little_maid"
+mandatory = false
+versionRange = "[0,)"
+ordering = "AFTER"
+side = "BOTH"

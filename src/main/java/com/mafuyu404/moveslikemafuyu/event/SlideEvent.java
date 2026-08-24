@@ -4,6 +4,7 @@ import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
 import com.mafuyu404.moveslikemafuyu.capability.MoveAttribute;
 import com.mafuyu404.moveslikemafuyu.capability.MoveAttributeResolver;
+import com.mafuyu404.moveslikemafuyu.client.ModKeyBindings;
 import com.mafuyu404.moveslikemafuyu.compat.KeyPrompts;
 import com.mafuyu404.moveslikemafuyu.network.KnockMessage;
 import com.mafuyu404.moveslikemafuyu.network.NetworkHandler;
@@ -130,6 +131,9 @@ public class SlideEvent {
         if (KeyInputHelper.isPress(event, options.keyDown)) {
             handleDownPress(player);
         }
+        if (ModKeyBindings.SLIDE_SHORTCUT != null && KeyInputHelper.isPress(event, ModKeyBindings.SLIDE_SHORTCUT)) {
+            handleSlideShortcutPress(player);
+        }
     }
     @SubscribeEvent
     public static void onMouseAction(InputEvent.MouseButton.Post event) {
@@ -145,6 +149,9 @@ public class SlideEvent {
         }
         if (KeyInputHelper.isPress(event, options.keyDown)) {
             handleDownPress(player);
+        }
+        if (ModKeyBindings.SLIDE_SHORTCUT != null && KeyInputHelper.isPress(event, ModKeyBindings.SLIDE_SHORTCUT)) {
+            handleSlideShortcutPress(player);
         }
     }
     @SubscribeEvent
@@ -179,7 +186,7 @@ public class SlideEvent {
 
     public static void startSlide(Player player, Vec3 direction) {
         Options options = Minecraft.getInstance().options;
-        if (!Config.enable("Slide") || cooldown > 0) return;
+        if (!Config.enable("Slide") || cooldown > 0 || player.getTags().contains("slide")) return;
         timer = MoveAttributeResolver.getInt(player, MoveAttribute.SLIDE_DURATION);
         air_timer = MoveAttributeResolver.getInt(player, MoveAttribute.SLIDE_AIR_DURATION);
         dap_times = MoveAttributeResolver.getInt(player, MoveAttribute.DAP_TIMES);
@@ -257,6 +264,15 @@ public class SlideEvent {
             if (!player.getTags().contains("craw")) startSlide(player);
         }
         lastShiftPressTime = currentTime;
+    }
+
+    private static void handleSlideShortcutPress(Player player) {
+        if (!Config.enable("Shortcut")) return;
+        // 快捷键与潜行键相同时交给潜行键逻辑处理，避免重复触发或绕过双击判定。
+        if (ModKeyBindings.SLIDE_SHORTCUT.getKey().equals(Minecraft.getInstance().options.keyShift.getKey())) return;
+        if (canSlide(player) && !player.getTags().contains("craw")) {
+            startSlide(player);
+        }
     }
 
     private static void handleDownPress(Player player) {

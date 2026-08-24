@@ -39,7 +39,8 @@ public class CrawEvent {
             KeyPrompts.show(options.keySprint.getKey().toString(), "smartkeyprompts.moveslikemafuyu.slide");
 
         if (Config.enable("Craw") && player.getTags().contains("craw")
-                && !player.isSpectator() && !player.getTags().contains("slide")) {
+                && !player.isSpectator() && !player.getTags().contains("slide")
+                && !RollEvent.isRolling(player)) {
             options.keyShift.setDown(false);
             PoseHelper.forcePose(player, Pose.SWIMMING);
         }

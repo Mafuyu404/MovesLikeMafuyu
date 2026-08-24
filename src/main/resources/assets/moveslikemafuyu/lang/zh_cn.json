@@ -1,4 +1,8 @@
 {
+  "key.categories.moveslikemafuyu": "真昼式移动",
+  "key.moveslikemafuyu.slide": "滑铲快捷键",
+  "key.moveslikemafuyu.roll": "翻滚快捷键",
+
   "smartkeyprompts.moveslikemafuyu.slide": "滑行",
   "smartkeyprompts.moveslikemafuyu.dap": "打水漂",
 
@@ -10,5 +14,8 @@
   "smartkeyprompts.moveslikemafuyu.leap": "飞扑",
   "smartkeyprompts.moveslikemafuyu.roll": "翻滚",
 
-  "effect.moveslikemafuyu.auto_dodge": "企鹅感应"
+  "effect.moveslikemafuyu.auto_dodge": "企鹅感应",
+  "tooltip.moveslikemafuyu.heart_of_the_sea.eat": "食用：获得 8 分钟自动闪避",
+  "tooltip.moveslikemafuyu.heart_of_the_sea.eat_with_maid": "食用：你与附近女仆获得 8 分钟自动闪避",
+  "tooltip.moveslikemafuyu.heart_of_the_sea.maid_bauble": "女仆饰品：装备时持续自动闪避"
 }

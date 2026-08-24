@@ -4,6 +4,7 @@ import com.mafuyu404.moveslikemafuyu.Config;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
 import com.mafuyu404.moveslikemafuyu.capability.MoveAttribute;
 import com.mafuyu404.moveslikemafuyu.capability.MoveAttributeResolver;
+import com.mafuyu404.moveslikemafuyu.client.ModKeyBindings;
 import com.mafuyu404.moveslikemafuyu.compat.KeyPrompts;
 import com.mafuyu404.moveslikemafuyu.network.NetworkHandler;
 import com.mafuyu404.moveslikemafuyu.network.TagMessage;
@@ -83,6 +84,10 @@ public class RollEvent {
         if (KeyInputHelper.isPress(event, options.keyJump)) {
             handleJumpPress(player);
         }
+
+        if (ModKeyBindings.ROLL_SHORTCUT != null && KeyInputHelper.isPress(event, ModKeyBindings.ROLL_SHORTCUT)) {
+            handleRollShortcutPress(player, options);
+        }
     }
 
     @SubscribeEvent
@@ -98,27 +103,60 @@ public class RollEvent {
         if (KeyInputHelper.isPress(event, options.keyJump)) {
             handleJumpPress(player);
         }
+
+        if (ModKeyBindings.ROLL_SHORTCUT != null && KeyInputHelper.isPress(event, ModKeyBindings.ROLL_SHORTCUT)) {
+            handleRollShortcutPress(player, options);
+        }
     }
 
-    public static void startRoll(Player player) {
-        if (!Config.enable("Roll") || player.getTags().contains("roll")) return;
+    public static boolean startRoll(Player player) {
+        return startRoll(player, horizontalDirection(player));
+    }
+
+    /**
+     * 以指定水平方向开始翻滚，供自动闪避等程序化触发使用。
+     *
+     * @return 翻滚是否成功开始
+     */
+    public static boolean startRoll(Player player, Vec3 direction) {
+        return startRollInternal(player, direction, false);
+    }
+
+    /**
+     * 向指定方向进行空中翻滚：先附加 {@code ROLL_AIR_VERTICAL_SPEED} 的竖直速度再翻滚。
+     *
+     * @return 翻滚是否成功开始
+     */
+    public static boolean startAirRoll(Player player, Vec3 direction) {
+        return startRollInternal(player, direction, true);
+    }
+
+    private static boolean startRollInternal(Player player, Vec3 direction, boolean airLift) {
+        if (!Config.enable("Roll") || player.getTags().contains("roll")) return false;
+        Vec3 horizontal = new Vec3(direction.x, 0, direction.z);
+        if (horizontal.lengthSqr() < 1.0E-6) {
+            horizontal = horizontalDirection(player);
+        } else {
+            horizontal = horizontal.normalize();
+        }
         timer = 0;
         previousProgress = 0;
         progress = 0;
         forcingShift = false;
         long currentTime = System.currentTimeMillis();
         rollMovementEnabled = player.onGround() || canAirRoll(player, currentTime);
-        rollDirection = horizontalDirection(player);
-        rollLocalDirection = localInputDirection(Minecraft.getInstance().options);
+        rollDirection = horizontal;
+        rollLocalDirection = worldToLocalDirection(player, horizontal);
         player.addTag("roll");
         player.setSprinting(true);
         NetworkHandler.CHANNEL.sendToServer(new TagMessage("roll", true));
 
-        if (!player.onGround() && rollMovementEnabled) {
+        if (airLift || (!player.onGround() && rollMovementEnabled)) {
             player.setDeltaMovement(player.getDeltaMovement().add(0, MoveAttributeResolver.getDouble(player, MoveAttribute.ROLL_AIR_VERTICAL_SPEED), 0));
         }
         if (rollMovementEnabled) applyRollMovement(player, 0.0f);
         player.playSound(SoundEvents.ARMOR_EQUIP_LEATHER, 0.6f, 1.2f);
+        return true;
     }
 
     public static void cancelRoll(Player player) {
@@ -190,6 +228,21 @@ public class RollEvent {
         return direction.lengthSqr() < 1.0E-6 ? new Vec3(0, 0, 1) : direction.normalize();
     }
 
+    /**
+     * 把世界坐标系下的水平方向换算成玩家本地输入方向（x=右，z=前），
+     * 使程序化触发的翻滚动画轴与键盘输入的翻滚保持一致。
+     */
+    private static Vec3 worldToLocalDirection(Player player, Vec3 worldDirection) {
+        Vec3 look = new Vec3(player.getLookAngle().x, 0, player.getLookAngle().z);
+        if (look.lengthSqr() < 1.0E-6) look = new Vec3(0, 0, 1);
+        look = look.normalize();
+        Vec3 right = new Vec3(-look.z, 0, look.x);
+        double forward = worldDirection.dot(look);
+        double side = worldDirection.dot(right);
+        Vec3 local = new Vec3(side, 0, forward);
+        return local.lengthSqr() < 1.0E-6 ? new Vec3(0, 0, 1) : local.normalize();
+    }
+
     private static boolean hasMovementInput(Options options) {
         return options.keyUp.isDown()
                 || options.keyDown.isDown()
@@ -249,6 +302,15 @@ public class RollEvent {
     private static void handleJumpPress(Player player) {
         if (player.onGround() && player.isSprinting()) {
             lastJumpPressTime = System.currentTimeMillis();
+        }
+    }
+
+    private static void handleRollShortcutPress(Player player, Options options) {
+        if (!Config.enable("Shortcut")) return;
+        // 快捷键与疾跑键相同时交给疾跑键逻辑处理，避免重复触发。
+        if (ModKeyBindings.ROLL_SHORTCUT.getKey().equals(options.keySprint.getKey())) return;
+        if (canRoll(player) && hasMovementInput(options)) {
+            startRoll(player);
         }
     }
 }

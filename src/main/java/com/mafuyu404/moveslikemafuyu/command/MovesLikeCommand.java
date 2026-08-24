@@ -3,6 +3,7 @@ package com.mafuyu404.moveslikemafuyu.command;
 import com.mafuyu404.moveslikemafuyu.MovesLikeMafuyu;
 import com.mafuyu404.moveslikemafuyu.capability.ModCapabilities;
 import com.mafuyu404.moveslikemafuyu.capability.MoveAttribute;
+import com.mafuyu404.moveslikemafuyu.event.MaidTestMode;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -30,7 +31,22 @@ public class MovesLikeCommand {
                 Commands.literal("moveslikecommand")
                         .requires(source -> source.hasPermission(2))
                         .then(attributeCommand("attribute"))
+                        .then(testMaidCommand())
         );
+    }
+
+    private static LiteralArgumentBuilder<CommandSourceStack> testMaidCommand() {
+        return Commands.literal("testmaid")
+                .then(Commands.literal("on")
+                        .executes(context -> setTestMaid(context.getSource(), true)))
+                .then(Commands.literal("off")
+                        .executes(context -> setTestMaid(context.getSource(), false)));
+    }
+
+    private static int setTestMaid(CommandSourceStack source, boolean value) {
+        MaidTestMode.setEnabled(source.getServer(), value);
+        source.sendSuccess(() -> Component.literal("Maid dodge test mode " + (value ? "enabled" : "disabled") + "."), true);
+        return 1;
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> attributeCommand(String name) {

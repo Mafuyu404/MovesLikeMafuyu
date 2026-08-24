@@ -1,4 +1,8 @@
 {
+  "key.categories.moveslikemafuyu": "MovesLikeMafuyu",
+  "key.moveslikemafuyu.slide": "Slide Shortcut",
+  "key.moveslikemafuyu.roll": "Roll Shortcut",
+
   "smartkeyprompts.moveslikemafuyu.slide": "Slide",
   "smartkeyprompts.moveslikemafuyu.dap": "Dap",
 
@@ -9,5 +13,8 @@
 
   "smartkeyprompts.moveslikemafuyu.leap": "Leap",
   "smartkeyprompts.moveslikemafuyu.roll": "Roll",
-  "effect.moveslikemafuyu.auto_dodge": "AutoDodge"
+  "effect.moveslikemafuyu.auto_dodge": "AutoDodge",
+  "tooltip.moveslikemafuyu.heart_of_the_sea.eat": "Eat: Gain Auto Dodge for 8 min",
+  "tooltip.moveslikemafuyu.heart_of_the_sea.eat_with_maid": "Eat: You and nearby maids gain Auto Dodge for 8 min",
+  "tooltip.moveslikemafuyu.heart_of_the_sea.maid_bauble": "Maid bauble: Enables Auto Dodge while equipped"
 }
